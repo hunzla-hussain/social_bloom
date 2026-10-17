@@ -1,1555 +1,853 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, type CSSProperties } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import Image from "next/image";
-import Link from "next/link";
+import s from "./page.module.css";
 
-const CASE_STUDIES = [
+const cx = (...names: (string | false)[]) =>
+  names
+    .filter(Boolean)
+    .map((n) => s[n as string])
+    .join(" ");
+
+const WIN_RATE = 0.25;
+const FEE_PER_APPOINTMENT = 250;
+
+const usd = (n: number) =>
+  n.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  });
+
+// Same client list, links, and icons as the logo banner on socialbloom.io
+const CLIENTS = [
+  { name: "BEST Lending Co", href: "https://bestlendingco.com/", domain: "bestlendingco.com" },
+  { name: "Advertise Purple", href: "https://www.advertisepurple.com/", domain: "advertisepurple.com" },
+  { name: "Bifrost AI", href: "https://www.bifrost.ai/", domain: "bifrost.ai" },
+  { name: "Ardent Blue", href: "https://ardentblue.com/", domain: "ardentblue.com" },
+  { name: "Yandex Self-Driving", href: "https://yandex.com/company/news/2021-12-21", domain: "yandex.com" },
+  { name: "Surefoot", href: "https://surefoot.me/", domain: "surefoot.me" },
+  { name: "Spacebar Studios", href: "https://www.spacebarstudios.co/", domain: "spacebarstudios.co" },
+  { name: "Revolt Digital", href: "https://revolt.digital/", domain: "revolt.digital" },
+  { name: "CloudTask", href: "https://cloudtask.com/", domain: "cloudtask.com" },
+] as const;
+
+const BEST_LENDING_VIDEO =
+  "https://pub-73fda59ea9644b9eaa960e7dad5f2fd6.r2.dev/socialbloom-videos/Best%20Lending%20Testimonial%20_%20%241M%2B%20in%20Pipeline%20Generated%20with%20SocialBloom%20(1).mp4";
+
+const INDUSTRIES = [
   {
-    title: "Northstar Capital",
-    headline: "Supported $7.4M in funded volume over 83 days",
-    value: "$7.4M",
-    metricLabel: "Funded volume influenced in 83 days",
-    overview:
-      "Northstar Capital wanted a more structured outbound system to create qualified borrower conversations at a consistent pace. We helped build that system from the ground up by refining the outbound offer, defining the ideal borrower profile, setting up cold email infrastructure, launching campaigns, and following up with positive replies to get qualified prospects onto the calendar quickly.",
-    whatWeDidLead: "We worked with Northstar to:",
-    whatWeDid: [
-      "clarify the outbound offer and positioning",
-      "define the ICP and borrower segments to target",
-      "build and configure the cold email infrastructure",
-      "launch and optimize the outbound campaigns",
-      "call positive replies to increase contact speed",
-      "book qualified meetings directly onto the calendar",
-      "support the handoff into the sales process",
-      "increase outbound volume as performance stabilized",
-    ],
-    result:
-      "Over 83 days, this outbound system helped generate qualified borrower conversations that supported $7.4M in funded volume.",
+    icon: "↗",
+    title: "Working Capital & MCA",
+    body: "Reach business owners whose industries and company profiles match your working capital or revenue-based financing offer.",
   },
   {
-    title: "Summit Business Funding",
-    headline: "19 qualified business borrower appointments in 5 weeks",
-    value: "19",
-    metricLabel: "Qualified business borrower appointments in 5 weeks",
-    overview:
-      "Summit Business Funding needed a more reliable way to generate conversations with qualified business borrowers. We built an outbound system designed to do more than just drive replies. The goal was to generate actual appointments with businesses that fit their lending criteria and were worth the team’s time.",
-    whatWeDidLead: "We helped Summit:",
-    whatWeDid: [
-      "tighten the outbound offer",
-      "define the right borrower ICPs",
-      "set up cold email infrastructure",
-      "launch targeted campaigns",
-      "monitor and optimize response quality",
-      "call positive replies to move prospects faster",
-      "book qualified appointments directly onto the client’s calendar",
-      "support the sales process after booking",
-    ],
-    result:
-      "In the first 5 weeks, the campaign generated 19 qualified business borrower appointments.",
+    icon: "▤",
+    title: "Business Loans & Lines of Credit",
+    body: "Start conversations with company decision-makers about term loans, expansion financing, and revolving credit options.",
   },
   {
-    title: "Ironclad Working Capital",
-    headline: "18% improvement in application-to-funding efficiency",
-    value: "18%",
-    metricLabel: "Improvement in application-to-funding efficiency",
-    overview:
-      "Ironclad Working Capital was not just looking for more top-of-funnel activity. The bigger opportunity was improving fit, follow-up, and conversion quality throughout the process. We built an outbound system aimed at bringing in stronger borrower opportunities and helping the team move faster on positive intent.",
-    whatWeDidLead: "We partnered with Ironclad to:",
-    whatWeDid: [
-      "refine the offer for outbound",
-      "define tighter borrower targeting criteria",
-      "set up the cold email infrastructure",
-      "launch and optimize campaigns",
-      "identify and respond quickly to positive replies",
-      "call engaged prospects to accelerate next steps",
-      "book qualified conversations onto the calendar",
-      "support a stronger sales handoff and follow-up process",
-      "scale activity once the system was working",
-    ],
-    result:
-      "By improving targeting, response handling, and downstream sales coordination, Ironclad saw an 18% improvement in application-to-funding efficiency.",
+    icon: "⚙",
+    title: "Equipment Financing",
+    body: "Target equipment-heavy businesses across transportation, manufacturing, construction, and related industries.",
+  },
+  {
+    icon: "▥",
+    title: "Commercial Real Estate",
+    body: "Connect with real estate investors, commercial operators, and developers who fit your funding programs.",
+  },
+  {
+    icon: "⇄",
+    title: "Invoice Factoring",
+    body: "Build campaigns for companies in industries where receivables financing may solve a genuine cash-flow problem.",
+  },
+  {
+    icon: "◎",
+    title: "Specialty Commercial Finance",
+    body: "Have a specialized lending product? We shape the targeting and messaging around your specific market.",
   },
 ] as const;
 
+const STEPS = [
+  {
+    n: "01",
+    icon: "◎",
+    title: "Define the target",
+    body: "We map your financing products to an approved Ideal Customer Profile: industries, regions, company size, decision-makers, and other criteria.",
+  },
+  {
+    n: "02",
+    icon: "↗",
+    title: "Launch the engine",
+    body: "We build prospect lists, manage sending infrastructure, personalize your offer, and launch targeted cold email campaigns.",
+  },
+  {
+    n: "03",
+    icon: "✉",
+    title: "Handle the replies",
+    body: "Our team follows up with interested prospects, evaluates agreed qualification criteria, and coordinates the meeting.",
+  },
+  {
+    n: "04",
+    icon: "✓",
+    title: "Take the meeting",
+    body: "Your team meets the prospect, assesses financing eligibility, handles underwriting, and works toward funding.",
+  },
+] as const;
+
+const ICP_LINES = [
+  ["Financing vertical", "Working Capital"],
+  ["Target business", "Established SMBs"],
+  ["Geography", "Approved states"],
+  ["Target contact", "Owner / CFO / Finance Lead"],
+  ["Revenue requirements", "Set with lender"],
+  ["Qualification standard", "Approved ICP Matrix"],
+] as const;
+
+const PRICE_ITEMS = [
+  "Custom ICP setup",
+  "Business targeting",
+  "Campaign infrastructure",
+  "Personalized outreach",
+  "Reply management",
+  "Calendar booking",
+  "Campaign optimization",
+  "Reporting & support",
+] as const;
+
+const FAQS = [
+  {
+    q: "Who is Lender Bloom designed for?",
+    a: "Business lenders, MCA and working capital providers, commercial real estate financing companies, equipment lenders, and other companies selling financing products to businesses—not consumer mortgage or personal loan marketers.",
+  },
+  {
+    q: "Are these exclusive business borrower appointments?",
+    a: "We build targeted campaigns for your financing offer and schedule resulting appointments with your team. This is not a shared lead-resale marketplace. Specific exclusivity terms should be confirmed in the signed agreement.",
+  },
+  {
+    q: "Can you target my underwriting criteria?",
+    a: "We can target around agreed, reasonably available business attributes such as industry, geography, company size, and identified decision-makers. We cannot independently verify every underwriting requirement before a lender performs due diligence.",
+  },
+  {
+    q: "Do you pre-approve prospects or guarantee funded loans?",
+    a: "No. Social Bloom is an outbound appointment-setting service, not a lender or underwriting provider. Your team handles documentation, credit assessment, eligibility, offers, and funding decisions.",
+  },
+  {
+    q: "What counts as a qualified appointment?",
+    a: "The applicable qualification criteria come from your approved ICP Matrix and governing agreement. Qualification, attendance, disputes, and credits follow the agreement rather than a generic website definition.",
+  },
+  {
+    q: "How does pricing work?",
+    a: "The advertised standard performance fee is $250 per qualified appointment, plus an agreed one-time setup fee. Exact charges, billing events, guarantees, and any custom pricing are documented in the signed agreement.",
+  },
+  {
+    q: "How fast can we launch?",
+    a: "Timing depends on onboarding, ICP and messaging approval, and outbound infrastructure readiness. Your team will receive a campaign-specific launch timeline.",
+  },
+] as const;
+
+function BookingLink({
+  variant,
+  style,
+}: {
+  variant: "white" | "dark";
+  style?: CSSProperties;
+}) {
+  return (
+    <a
+      href="https://socialbloom.io/schedule"
+      target="_blank"
+      rel="noopener"
+      className={cx("btn", variant)}
+      style={style}
+    >
+      Get Guaranteed Meetings ↗
+    </a>
+  );
+}
+
 export default function Home() {
-  const makeMockNumbers = (seed: string) => {
-    // Deterministic mock numbers (SSR-safe + no hydration mismatch).
-    const hashString = (str: string) => {
-      let h = 2166136261; // FNV-1a
-      for (let i = 0; i < str.length; i++) {
-        h ^= str.charCodeAt(i);
-        h = Math.imul(h, 16777619);
-      }
-      return h >>> 0;
-    };
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [meetings, setMeetings] = useState(10);
+  const [avgLoan, setAvgLoan] = useState("50000");
+  const [revenueRate, setRevenueRate] = useState("5");
 
-    const mulberry32 = (a: number) => {
-      return () => {
-        let t = (a += 0x6d2b79f5);
-        t = Math.imul(t ^ (t >>> 15), t | 1);
-        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-      };
-    };
-
-    const rnd = mulberry32(hashString(seed));
-
-    const randInt = (min: number, max: number) =>
-      Math.floor(rnd() * (max - min + 1)) + min;
-    const qualifiedBorrowerAppointments = randInt(40, 140);
-
-    return {
-      qualifiedBorrowerAppointments,
-      fundedVolumeInfluenced: "$22.5M",
-    };
-  };
-
-  const mockNumbers = useMemo(() => makeMockNumbers("social-bloom:home:metrics"), []);
-
-  const [caseSlide, setCaseSlide] = useState(0);
-  const caseTouchStartX = useRef<number | null>(null);
-  const caseStudyCount = CASE_STUDIES.length;
-  const isFirstCaseSlide = caseSlide === 0;
-  const isLastCaseSlide = caseSlide === caseStudyCount - 1;
-  const goCasePrev = () => setCaseSlide((i) => Math.max(0, i - 1));
-  const goCaseNext = () =>
-    setCaseSlide((i) => Math.min(caseStudyCount - 1, i + 1));
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("visible");
-          }
-        });
-      },
-      { threshold: 0.12, rootMargin: "0px 0px -40px 0px" },
-    );
-
-    document
-      .querySelectorAll<HTMLElement>(".reveal")
-      .forEach((el) => observer.observe(el));
-
-    const faqSection = document.getElementById("faq");
-    const faqButtons = faqSection?.querySelectorAll<HTMLButtonElement>("button") ?? [];
-
-    const handleFaqClick = (btn: HTMLButtonElement) => {
-      const item = btn.parentElement;
-      if (!item) return;
-      const wasOpen = item.classList.contains("open");
-
-      document
-        .querySelectorAll<HTMLElement>("#faq .open")
-        .forEach((i) => i.classList.remove("open"));
-
-      if (!wasOpen) item.classList.add("open");
-    };
-
-    faqButtons.forEach((btn) => btn.addEventListener("click", () => handleFaqClick(btn)));
-
-    return () => {
-      document
-        .querySelectorAll<HTMLElement>(".reveal")
-        .forEach((el) => observer.unobserve(el));
-      observer.disconnect();
-      faqButtons.forEach((btn) => btn.replaceWith(btn.cloneNode(true) as HTMLButtonElement));
-    };
-  }, []);
+  const deals = meetings * WIN_RATE;
+  const funded = deals * Math.max(0, Number(avgLoan) || 0);
+  const gross =
+    (funded * Math.min(100, Math.max(0, Number(revenueRate) || 0))) / 100;
 
   return (
-    <div className="min-h-dvh overflow-x-hidden bg-sb-bg text-sb-text">
-      <div className="fixed inset-0 -z-10 pointer-events-none bg-[radial-gradient(ellipse_60%_40%_at_20%_0%,rgba(95,95,255,0.06)_0%,transparent_70%),radial-gradient(ellipse_50%_50%_at_80%_10%,rgba(42,50,130,0.05)_0%,transparent_60%),radial-gradient(ellipse_40%_30%_at_60%_90%,rgba(16,185,154,0.03)_0%,transparent_60%)]" />
-
+    <div className="flex min-h-dvh flex-col overflow-x-hidden">
       <SiteHeader />
 
-      {/* HERO */}
-      <section
-        className="relative flex min-h-dvh items-center overflow-x-hidden py-20 pb-16 pt-28 sm:min-h-screen sm:py-[120px] sm:pb-20 sm:pt-[120px]"
-        id="hero"
-      >
-        <div
-          className="pointer-events-none absolute -top-[20%] left-1/2 z-0 h-[min(900px,95vmin)] w-[min(900px,95vmin)] max-w-[100vw] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(95,95,255,0.07)_0%,transparent_50%),radial-gradient(circle_at_30%_60%,rgba(42,50,130,0.05)_0%,transparent_50%),radial-gradient(circle_at_70%_40%,rgba(16,185,154,0.04)_0%,transparent_50%)]"
-          aria-hidden
-        />
-        <Image
-          className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[min(550px,90vmin)] w-[min(550px,90vmin)] max-w-[100vw] -translate-x-1/2 -translate-y-1/2 opacity-[0.04] [animation:slowSpin_120s_linear_infinite]"
-          src="/favicon.png"
-          alt=""
-          width={1802}
-          height={1787}
-        />
-        <div className="relative z-[1] mx-auto w-full max-w-sb px-4 sm:px-6">
-          <div className="relative z-[1] mx-auto max-w-[820px] text-center">
-            <div className="mb-8 inline-flex max-w-full flex-wrap items-center justify-center gap-2 px-1 text-center text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-sb-primary before:hidden before:h-px before:w-5 before:shrink-0 before:bg-sb-primary/40 before:content-[''] after:hidden after:h-px after:w-5 after:shrink-0 after:bg-sb-primary/40 after:content-[''] reveal sm:before:block sm:after:block sm:text-[0.72rem] sm:tracking-[0.18em] sm:before:w-6 sm:after:w-6">
-              Predictable Borrower Demand for Lending Teams
-            </div>
-            <h1 className="reveal reveal-delay-1 mb-6 px-1 text-center font-display text-[clamp(1.65rem,calc(5.5vw+0.25rem),4.4rem)] font-extrabold leading-[1.08] tracking-[-0.035em] sm:px-0 sm:leading-[1.05]">
-              Stop Chasing Borrowers. Start{" "}
-              <span className="inline bg-gradient-to-br from-sb-primary via-sb-accent to-sb-secondary bg-[length:200%_auto] bg-clip-text text-transparent [-webkit-background-clip:text] [-webkit-text-fill-color:transparent] [animation:gradientShift_4s_ease_infinite]">Closing More Loans</span>.
-          </h1>
-            <p className="mx-auto mb-10 max-w-[600px] px-1 text-base leading-[1.7] text-sb-text-secondary reveal reveal-delay-2 sm:px-0 sm:text-[1.15rem]">
-              We help lending companies generate qualified borrower conversations
-              for purchase, refinance, and home equity offers so your loan
-              officers spend more time closing and less time hunting for demand.
-            </p>
-            <div className="mx-auto flex w-full max-w-md flex-col gap-3 reveal reveal-delay-3 sm:max-w-none sm:flex-row sm:flex-wrap sm:justify-center sm:gap-4">
-              <Link
-                href="/schedule"
-                className="group inline-flex min-h-12 w-full cursor-pointer items-center justify-center rounded-lg gap-2 bg-sb-primary px-6 py-3.5 text-base font-semibold text-white shadow-none transition-[background,transform,box-shadow] duration-[250ms] hover:-translate-y-px hover:bg-sb-purple-mid hover:shadow-[0_8px_24px_rgba(95,95,255,0.2)] sm:w-auto sm:px-8 sm:py-4"
-              >
-                Book a Strategy Call
-                <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M5 12h14" />
-                <path d="m12 5 7 7-7 7" />
-              </svg>
-              </Link>
-              <a href="#how" className="inline-flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-[10px] border border-sb-border-strong bg-transparent px-6 py-3.5 text-base font-medium text-sb-text-secondary transition-all duration-300 hover:border-sb-purple-mid hover:bg-sb-primary/5 hover:text-sb-text sm:w-auto sm:px-8 sm:py-4">
-                See How It Works
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* METRICS */}
-      <div className="border-y border-sb-border py-10">
-        <div className="relative z-[1] mx-auto w-full max-w-sb px-4 sm:px-6">
-          <div className="grid grid-cols-1 gap-8 text-center min-[600px]:grid-cols-2 min-[600px]:gap-6 reveal">
-            <div>
-              <div className="font-display text-[clamp(2rem,4vw,3rem)] font-semibold text-sb-accent">
-                {mockNumbers.qualifiedBorrowerAppointments}+
+      <main className={s.root} id="top">
+        {/* HERO */}
+        <section className={s.hero}>
+          <div className={cx("wrap", "hero-grid")}>
+            <div className={s.reveal}>
+              <div className={cx("eyebrow", "mint")}>
+                B2B LENDING ACQUISITION · DONE FOR YOU
               </div>
-              <div className="mt-1 text-[0.85rem] font-medium text-sb-text-secondary">Qualified Borrower Appointments</div>
-            </div>
-            <div>
-              <div className="font-display text-[clamp(2rem,4vw,3rem)] font-semibold text-sb-accent">
-                {mockNumbers.fundedVolumeInfluenced}
-              </div>
-              <div className="mt-1 text-[0.85rem] font-medium text-sb-text-secondary">Funded Volume Influenced</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* TESTIMONIALS */}
-      {/* <div className="py-16">
-        <div className="relative z-[1] mx-auto w-full max-w-sb px-4 sm:px-6">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div className="rounded-2xl border border-sb-border bg-sb-card p-6 transition-[border-color,transform] duration-300 hover:-translate-y-0.5 hover:border-sb-border-strong sm:p-8 reveal">
-              <p className="mb-6 text-[1.05rem] italic leading-[1.7] text-sb-text [&_strong]:font-normal [&_strong]:not-italic [&_strong]:text-sb-accent">
-                &quot;We started seeing SQLs flood in right away, which led to{" "}
-                <strong>
-                  $113k pipeline value being generated in the first 20 days.
-                </strong>
-                &quot;
+              <h1>
+                Your next business borrower is{" "}
+                <em>one conversation away.</em>
+              </h1>
+              <p>
+                Stop competing for recycled leads. Social Bloom builds and runs
+                your outbound engine—targeting the right companies, starting
+                conversations, and booking qualified business financing
+                appointments straight onto your calendar.
               </p>
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sb-primary to-sb-secondary text-sm font-bold text-white">LS</div>
+              <div className={s["hero-actions"]}>
+                <BookingLink variant="white" />
+              </div>
+              <div className={s["hero-proof"]}>
+                <span>No shared lead lists</span>
+                <span>Custom borrower targeting</span>
+                <span>Pay per qualified appointment</span>
+              </div>
+            </div>
+            <div className={cx("dash", "reveal")}>
+              <div className={s["dash-top"]}>
+                <span>✣  Campaign performance</span>
+                <span className={s.live}>● LIVE SYSTEM</span>
+              </div>
+              <div className={s["dash-stats"]}>
+                <div className={s.metric}>
+                  <small>Qualified appointments</small>
+                  <strong>82</strong>
+                  <i>✓ Booked conversations</i>
+                </div>
+                <div className={s.metric}>
+                  <small>Pipeline value</small>
+                  <strong>$1.4M</strong>
+                  <i>↗ In three months</i>
+                </div>
+              </div>
+              <div className={s.chart}>
+                <div className={s["chart-head"]}>
+                  <span>Pipeline momentum</span>
+                  <span style={{ color: "#818ba1" }}>90-day overview</span>
+                </div>
+                <svg
+                  aria-label="Illustrative growth curve"
+                  role="img"
+                  viewBox="0 0 420 130"
+                >
+                  <defs>
+                    <linearGradient
+                      id="lb-pipeline-grad"
+                      x1="0"
+                      x2="0"
+                      y1="0"
+                      y2="1"
+                    >
+                      <stop stopColor="#5F5FFF" stopOpacity=".25" />
+                      <stop offset="1" stopColor="#5F5FFF" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <path
+                    d="M0 118L43 112L79 102L112 106L151 87L186 93L226 62L263 68L304 43L346 49L383 21L420 9L420 130L0 130Z"
+                    fill="url(#lb-pipeline-grad)"
+                  />
+                  <path
+                    d="M0 118L43 112L79 102L112 106L151 87L186 93L226 62L263 68L304 43L346 49L383 21L420 9"
+                    fill="none"
+                    stroke="#5F5FFF"
+                    strokeLinecap="round"
+                    strokeWidth="4"
+                  />
+                </svg>
+              </div>
+              <div className={s.pipeline}>
+                <span className={s.avatar}>BL</span>
                 <div>
-                  <div className="text-[0.9rem] font-semibold">Luke Shalom</div>
-                  <div className="text-[0.8rem] text-sb-text-muted">CEO, Atticus Media</div>
+                  <b>Best Lending Co</b>
+                  <small>Real client case study • Cold email</small>
                 </div>
+                <label>82 SQLs</label>
               </div>
-            </div>
-            <div className="rounded-2xl border border-sb-border bg-sb-card p-6 transition-[border-color,transform] duration-300 hover:-translate-y-0.5 hover:border-sb-border-strong sm:p-8 reveal reveal-delay-1">
-              <p className="mb-6 text-[1.05rem] italic leading-[1.7] text-sb-text [&_strong]:font-normal [&_strong]:not-italic [&_strong]:text-sb-accent">
-                &quot;Over the past 2.5 years, their strategies have helped us
-                achieve <strong>$12 million generated.</strong> I can&apos;t
-                recommend Social Bloom highly enough!&quot;
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sb-primary to-sb-secondary text-sm font-bold text-white">AW</div>
-                <div>
-                  <div className="text-[0.9rem] font-semibold">Andrew Watson</div>
-                  <div className="text-[0.8rem] text-sb-text-muted">Head of Sales, Bifrost</div>
-                </div>
+              <div className={s["dash-note"]}>
+                Real published case-study totals; chart is illustrative, not
+                historical time-series data.
               </div>
             </div>
           </div>
-        </div>
-      </div> */}
+        </section>
 
-      {/* PROBLEM */}
-      <section id="about" className="border-t border-sb-border">
-        <div className="relative z-[1] mx-auto w-full max-w-sb px-4 sm:px-6">
-          <div className="mb-14 reveal">
-            <div className="mb-3 text-center text-[0.75rem] font-bold uppercase tracking-[0.15em] text-sb-primary">The Borrower Demand Problem</div>
-            <h2 className="mb-4 text-center font-display text-[clamp(1.8rem,3.5vw,2.8rem)] font-extrabold leading-[1.15] tracking-[-0.03em]">
-              Your team does not need more leads. It needs more qualified
-              borrower conversations.
-            </h2>
-            <p className="mx-auto max-w-[560px] text-center text-[1.05rem] leading-[1.7] text-sb-text-secondary">
-              Most lending marketing creates activity, not closings. You are
-              tired of:
-            </p>
-          </div>
-          <div className="grid grid-cols-1 gap-5 min-[600px]:grid-cols-2">
-            <div className="rounded-[14px] border border-sb-border bg-sb-card p-5 transition-[border-color,background] duration-300 sm:p-7 hover:border-sb-accent/25 hover:bg-sb-card-hover [&_h3]:mb-2 [&_h3]:text-[1.05rem] [&_h3]:font-semibold [&_p]:text-sm [&_p]:leading-snug [&_p]:text-sb-text-secondary reveal">
-              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-[10px] bg-sb-accent/[0.08] text-lg text-sb-accent">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M2 20h.01" />
-                  <path d="M7 20v-4" />
-                  <path d="M12 20v-8" />
-                  <path d="M17 20V8" />
-                  <path d="M22 4v16" />
-                </svg>
-              </div>
-              <h3>Rate shoppers with no intent</h3>
-              <p>
-                Your team spends time on people who want a quote but never move
-                forward.
-              </p>
-            </div>
-            <div className="rounded-[14px] border border-sb-border bg-sb-card p-5 transition-[border-color,background] duration-300 sm:p-7 hover:border-sb-accent/25 hover:bg-sb-card-hover [&_h3]:mb-2 [&_h3]:text-[1.05rem] [&_h3]:font-semibold [&_p]:text-sm [&_p]:leading-snug [&_p]:text-sb-text-secondary reveal reveal-delay-1">
-              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-[10px] bg-sb-accent/[0.08] text-lg text-sb-accent">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M12 6v6l4 2" />
-                </svg>
-              </div>
-              <h3>Unpredictable application flow</h3>
-              <p>
-                One month looks strong, the next goes quiet. That makes staffing
-                and forecasting harder.
-              </p>
-            </div>
-            <div className="rounded-[14px] border border-sb-border bg-sb-card p-5 transition-[border-color,background] duration-300 sm:p-7 hover:border-sb-accent/25 hover:bg-sb-card-hover [&_h3]:mb-2 [&_h3]:text-[1.05rem] [&_h3]:font-semibold [&_p]:text-sm [&_p]:leading-snug [&_p]:text-sb-text-secondary reveal reveal-delay-2">
-              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-[10px] bg-sb-accent/[0.08] text-lg text-sb-accent">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M2 12h5" />
-                  <path d="M17 12h5" />
-                  <path d="M12 2v5" />
-                  <path d="M12 17v5" />
-                  <path d="m4.93 4.93 3.54 3.54" />
-                  <path d="m15.54 15.54 3.53 3.53" />
-                  <path d="m15.54 8.46 3.53-3.53" />
-                  <path d="m4.93 19.07 3.54-3.54" />
-                </svg>
-              </div>
-              <h3>High CPL with weak downstream revenue</h3>
-              <p>
-                You pay for clicks and form fills, but too few turn into real
-                applications or funded loans.
-              </p>
-            </div>
-            <div className="rounded-[14px] border border-sb-border bg-sb-card p-5 transition-[border-color,background] duration-300 sm:p-7 hover:border-sb-accent/25 hover:bg-sb-card-hover [&_h3]:mb-2 [&_h3]:text-[1.05rem] [&_h3]:font-semibold [&_p]:text-sm [&_p]:leading-snug [&_p]:text-sb-text-secondary reveal reveal-delay-3">
-              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-[10px] bg-sb-accent/[0.08] text-lg text-sb-accent">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M17 14V2" />
-                  <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76l-5.74 8z" />
-                </svg>
-              </div>
-              <h3>Loan officers doing marketing work</h3>
-              <p>
-                Your best closers get dragged into prospecting instead of
-                focusing on borrower conversations and follow-up.
-              </p>
-            </div>
-          </div>
-          <div className="mt-8 rounded-xl border border-sb-accent/15 bg-sb-accent/[0.04] p-6 text-center [&_p]:text-base [&_p]:font-medium [&_p]:text-sb-accent reveal">
-            <p>Empty calendars now become missed closings later.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* SOLUTION */}
-      <section className="border-y border-sb-border bg-sb-bg-secondary">
-        <div className="relative z-[1] mx-auto w-full max-w-sb px-4 sm:px-6">
-          <div className="mb-14 reveal">
-            <div className="mb-3 text-center text-[0.75rem] font-bold uppercase tracking-[0.15em] text-sb-primary">The Solution</div>
-            <h2 className="mb-4 text-center font-display text-[clamp(1.8rem,3.5vw,2.8rem)] font-extrabold leading-[1.15] tracking-[-0.03em]">
-              A more predictable way to generate borrower demand
-            </h2>
-            <p className="mx-auto max-w-[560px] text-center text-[1.05rem] leading-[1.7] text-sb-text-secondary">
-              Social Bloom helps lending teams create a steadier flow of
-              qualified borrower opportunities without piling more work onto
-              internal teams.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            <div className="group relative overflow-hidden rounded-[14px] border border-sb-border bg-sb-card p-6 pb-6 transition-[border-color,transform] duration-300 sm:p-8 sm:pb-7 before:pointer-events-none before:absolute before:left-0 before:right-0 before:top-0 before:h-[3px] before:bg-gradient-to-r before:from-sb-primary before:to-sb-accent before:opacity-0 before:transition-opacity before:duration-300 hover:-translate-y-[3px] hover:border-sb-border-strong group-hover:before:opacity-100 [&_h3]:mb-3 [&_h3]:text-[1.15rem] [&_h3]:font-semibold [&_p]:text-sm [&_p]:leading-[1.65] [&_p]:text-sb-text-secondary reveal">
-              <div className="mb-4 bg-gradient-to-b from-sb-primary/35 to-sb-secondary/20 bg-clip-text font-display text-[2.5rem] font-bold leading-none text-transparent [-webkit-background-clip:text] [-webkit-text-fill-color:transparent]">01</div>
-              <h3>Done-for-you demand generation</h3>
-              <p>
-                We help you build a borrower acquisition system so your loan
-                officers can stay focused on conversations, applications, and
-                closings.
-              </p>
-            </div>
-            <div className="group relative overflow-hidden rounded-[14px] border border-sb-border bg-sb-card p-6 pb-6 transition-[border-color,transform] duration-300 sm:p-8 sm:pb-7 before:pointer-events-none before:absolute before:left-0 before:right-0 before:top-0 before:h-[3px] before:bg-gradient-to-r before:from-sb-primary before:to-sb-accent before:opacity-0 before:transition-opacity before:duration-300 hover:-translate-y-[3px] hover:border-sb-border-strong group-hover:before:opacity-100 [&_h3]:mb-3 [&_h3]:text-[1.15rem] [&_h3]:font-semibold [&_p]:text-sm [&_p]:leading-[1.65] [&_p]:text-sb-text-secondary reveal reveal-delay-1">
-              <div className="mb-4 bg-gradient-to-b from-sb-primary/35 to-sb-secondary/20 bg-clip-text font-display text-[2.5rem] font-bold leading-none text-transparent [-webkit-background-clip:text] [-webkit-text-fill-color:transparent]">02</div>
-              <h3>Built around loan intent</h3>
-              <p>
-                We align messaging around the offers borrowers already care
-                about most: purchase, refinance, and home equity.
-              </p>
-            </div>
-            <div className="group relative overflow-hidden rounded-[14px] border border-sb-border bg-sb-card p-6 pb-6 transition-[border-color,transform] duration-300 sm:p-8 sm:pb-7 before:pointer-events-none before:absolute before:left-0 before:right-0 before:top-0 before:h-[3px] before:bg-gradient-to-r before:from-sb-primary before:to-sb-accent before:opacity-0 before:transition-opacity before:duration-300 hover:-translate-y-[3px] hover:border-sb-border-strong group-hover:before:opacity-100 [&_h3]:mb-3 [&_h3]:text-[1.15rem] [&_h3]:font-semibold [&_p]:text-sm [&_p]:leading-[1.65] [&_p]:text-sb-text-secondary reveal reveal-delay-2">
-              <div className="mb-4 bg-gradient-to-b from-sb-primary/35 to-sb-secondary/20 bg-clip-text font-display text-[2.5rem] font-bold leading-none text-transparent [-webkit-background-clip:text] [-webkit-text-fill-color:transparent]">03</div>
-              <h3>Qualified opportunities over vanity metrics</h3>
-              <p>
-                The goal is not more traffic or more junk leads. It is more
-                conversations that can turn into funded loans.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* HOW IT WORKS */}
-      <section id="how">
-        <div className="relative z-[1] mx-auto w-full max-w-sb px-4 sm:px-6">
-          <div className="mb-16 reveal">
-            <div className="mb-3 text-center text-[0.75rem] font-bold uppercase tracking-[0.15em] text-sb-primary">How It Works</div>
-            <h2 className="mb-4 text-center font-display text-[clamp(1.8rem,3.5vw,2.8rem)] font-extrabold leading-[1.15] tracking-[-0.03em]">
-              Your lending growth engine
-              <br />
-              in 3 Steps
-            </h2>
-          </div>
-          <div className="flex flex-col">
-            {/* Step 1 */}
-            <div className="grid grid-cols-1 items-start gap-10 border-b border-sb-border py-12 first:pt-0 last:border-b-0 md:grid-cols-[200px_1fr] md:gap-10 reveal">
-              <div className="top-[100px] flex flex-row items-center gap-4 md:sticky md:flex-col md:items-start md:gap-0">
-                <div className="bg-gradient-to-b from-sb-primary to-sb-secondary bg-clip-text font-display text-[2.5rem] font-bold leading-none text-transparent [-webkit-background-clip:text] [-webkit-text-fill-color:transparent] md:text-[4rem]">01</div>
-                <div className="mt-2 text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-sb-text-muted">Foundation</div>
-              </div>
-              <div className="[&_h3]:mb-4 [&_h3]:font-display [&_h3]:text-2xl [&_h3]:font-semibold [&_>p]:mb-6 [&_>p]:text-[0.95rem] [&_>p]:leading-[1.7] [&_>p]:text-sb-text-secondary">
-                <h3>Foundation – Define the borrower profile</h3>
-                <p>
-                  We start by getting clear on the borrowers, geographies, loan
-                  products, and offer angles that matter most to your team.
-                </p>
-                <div className="flex flex-col gap-4">
-                  <div className="flex gap-3.5 [&_h4]:mb-0.5 [&_h4]:text-sm [&_h4]:font-semibold [&_p]:text-[0.85rem] [&_p]:leading-snug [&_p]:text-sb-text-secondary">
-                    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-sb-purple-glow text-sb-secondary [&_svg]:h-3.5 [&_svg]:w-3.5">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path d="M12 2 2 7l10 5 10-5-10-5Z" />
-                        <path d="m2 17 10 5 10-5" />
-                        <path d="m2 12 10 5 10-5" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h4>Target borrower profile</h4>
-                      <p>
-                        Clarify which borrowers are the right fit so marketing
-                        and sales stay focused on high-intent opportunities.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3.5 [&_h4]:mb-0.5 [&_h4]:text-sm [&_h4]:font-semibold [&_p]:text-[0.85rem] [&_p]:leading-snug [&_p]:text-sb-text-secondary">
-                    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-sb-purple-glow text-sb-secondary [&_svg]:h-3.5 [&_svg]:w-3.5">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                        <polyline points="17 8 12 3 7 8" />
-                        <line x1="12" x2="12" y1="3" y2="15" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h4>Product-level positioning</h4>
-                      <p>
-                        Align messaging to the specific loan products you want
-                        to grow, not generic lending language.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3.5 [&_h4]:mb-0.5 [&_h4]:text-sm [&_h4]:font-semibold [&_p]:text-[0.85rem] [&_p]:leading-snug [&_p]:text-sb-text-secondary">
-                    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-sb-purple-glow text-sb-secondary [&_svg]:h-3.5 [&_svg]:w-3.5">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <rect width="18" height="18" x="3" y="3" rx="2" />
-                        <path d="M3 9h18" />
-                        <path d="M9 21V9" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h4>Market and geography focus</h4>
-                      <p>
-                        Prioritize the markets and geographies where your team
-                        can win and scale.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Step 2 */}
-            <div className="grid grid-cols-1 items-start gap-10 border-b border-sb-border py-12 first:pt-0 last:border-b-0 md:grid-cols-[200px_1fr] md:gap-10 reveal">
-              <div className="top-[100px] flex flex-row items-center gap-4 md:sticky md:flex-col md:items-start md:gap-0">
-                <div className="bg-gradient-to-b from-sb-primary to-sb-secondary bg-clip-text font-display text-[2.5rem] font-bold leading-none text-transparent [-webkit-background-clip:text] [-webkit-text-fill-color:transparent] md:text-[4rem]">02</div>
-                <div className="mt-2 text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-sb-text-muted">Launch</div>
-              </div>
-              <div className="[&_h3]:mb-4 [&_h3]:font-display [&_h3]:text-2xl [&_h3]:font-semibold [&_>p]:mb-6 [&_>p]:text-[0.95rem] [&_>p]:leading-[1.7] [&_>p]:text-sb-text-secondary">
-                <h3>Launch – Generate qualified borrower demand</h3>
-                <p>
-                  We launch messaging built around borrower intent so your team
-                  gets more conversations tied to real loan opportunities.
-                </p>
-                <div className="flex flex-col gap-4">
-                  <div className="flex gap-3.5 [&_h4]:mb-0.5 [&_h4]:text-sm [&_h4]:font-semibold [&_p]:text-[0.85rem] [&_p]:leading-snug [&_p]:text-sb-text-secondary">
-                    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-sb-purple-glow text-sb-secondary [&_svg]:h-3.5 [&_svg]:w-3.5">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <circle cx="11" cy="11" r="8" />
-                        <path d="m21 21-4.3-4.3" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h4>Purchase demand</h4>
-                      <p>
-                        Attract purchase borrowers who are ready to move rather
-                        than just rate shoppers.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3.5 [&_h4]:mb-0.5 [&_h4]:text-sm [&_h4]:font-semibold [&_p]:text-[0.85rem] [&_p]:leading-snug [&_p]:text-sb-text-secondary">
-                    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-sb-purple-glow text-sb-secondary [&_svg]:h-3.5 [&_svg]:w-3.5">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-                        <polyline points="14 2 14 8 20 8" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h4>Refinance demand</h4>
-                      <p>
-                        Capture refinance opportunities when timing, rates, and
-                        messaging line up.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3.5 [&_h4]:mb-0.5 [&_h4]:text-sm [&_h4]:font-semibold [&_p]:text-[0.85rem] [&_p]:leading-snug [&_p]:text-sb-text-secondary">
-                    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-sb-purple-glow text-sb-secondary [&_svg]:h-3.5 [&_svg]:w-3.5">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path d="M12 20h9" />
-                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h4>Home equity demand</h4>
-                      <p>
-                        Reach borrowers who want to unlock equity for projects,
-                        investments, or consolidation.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Step 3 */}
-            <div className="grid grid-cols-1 items-start gap-10 border-b border-sb-border py-12 first:pt-0 last:border-b-0 md:grid-cols-[200px_1fr] md:gap-10 reveal">
-              <div className="top-[100px] flex flex-row items-center gap-4 md:sticky md:flex-col md:items-start md:gap-0">
-                <div className="bg-gradient-to-b from-sb-primary to-sb-secondary bg-clip-text font-display text-[2.5rem] font-bold leading-none text-transparent [-webkit-background-clip:text] [-webkit-text-fill-color:transparent] md:text-[4rem]">03</div>
-                <div className="mt-2 text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-sb-text-muted">Optimize</div>
-              </div>
-              <div className="[&_h3]:mb-4 [&_h3]:font-display [&_h3]:text-2xl [&_h3]:font-semibold [&_>p]:mb-6 [&_>p]:text-[0.95rem] [&_>p]:leading-[1.7] [&_>p]:text-sb-text-secondary">
-                <h3>Optimize – Improve for applications and closings</h3>
-                <p>
-                  We refine around what actually matters downstream, so you are
-                  not just generating leads – you are improving the path to
-                  funded volume.
-                </p>
-                <div className="flex flex-col gap-4">
-                  <div className="flex gap-3.5 [&_h4]:mb-0.5 [&_h4]:text-sm [&_h4]:font-semibold [&_p]:text-[0.85rem] [&_p]:leading-snug [&_p]:text-sb-text-secondary">
-                    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-sb-purple-glow text-sb-secondary [&_svg]:h-3.5 [&_svg]:w-3.5">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <rect
-                          width="18"
-                          height="18"
-                          x="3"
-                          y="4"
-                          rx="2"
-                          ry="2"
-                        />
-                        <line x1="16" x2="16" y1="2" y2="6" />
-                        <line x1="8" x2="8" y1="2" y2="6" />
-                        <line x1="3" x2="21" y1="10" y2="10" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h4>Appointment quality</h4>
-                      <p>
-                        Focus on conversations that are tied to real borrower
-                        intent and fit your profile.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3.5 [&_h4]:mb-0.5 [&_h4]:text-sm [&_h4]:font-semibold [&_p]:text-[0.85rem] [&_p]:leading-snug [&_p]:text-sb-text-secondary">
-                    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-sb-purple-glow text-sb-secondary [&_svg]:h-3.5 [&_svg]:w-3.5">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path d="M3 3v18h18" />
-                        <path d="m19 9-5 5-4-4-3 3" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h4>Application rate</h4>
-                      <p>
-                        Track and improve how many conversations turn into
-                        completed, qualified applications.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3.5 [&_h4]:mb-0.5 [&_h4]:text-sm [&_h4]:font-semibold [&_p]:text-[0.85rem] [&_p]:leading-snug [&_p]:text-sb-text-secondary">
-                    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-sb-purple-glow text-sb-secondary [&_svg]:h-3.5 [&_svg]:w-3.5">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
-                        <path d="m9 12 2 2 4-4" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h4>Funded loan efficiency</h4>
-                      <p>
-                        Optimize the steps between application and funded loan
-                        so marketing supports the full revenue picture.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CASE STUDIES */}
-      <section className="border-y border-sb-border bg-sb-bg-secondary" id="cases">
-        <div className="relative z-[1] mx-auto w-full max-w-sb px-4 sm:px-6">
-          <div className="mb-14 reveal">
-            <div className="mb-3 text-center text-[0.75rem] font-bold uppercase tracking-[0.15em] text-sb-primary">Results</div>
-            <h2 className="mb-4 text-center font-display text-[clamp(1.8rem,3.5vw,2.8rem)] font-extrabold leading-[1.15] tracking-[-0.03em]">Results that matter to lenders</h2>
-            <p className="mx-auto max-w-[560px] text-center text-[1.05rem] leading-[1.7] text-sb-text-secondary">
-              Show the numbers your team actually cares about: qualified
-              borrower appointments, application rate, cost per funded loan, and
-              funded volume.
-            </p>
-          </div>
-          <div
-            className="reveal relative mx-auto max-w-[720px]"
-            onKeyDown={(e) => {
-              if (e.key === "ArrowLeft") {
-                e.preventDefault();
-                goCasePrev();
-              } else if (e.key === "ArrowRight") {
-                e.preventDefault();
-                goCaseNext();
-              }
-            }}
-            onTouchStart={(e) => {
-              caseTouchStartX.current = e.targetTouches[0]?.clientX ?? null;
-            }}
-            onTouchEnd={(e) => {
-              const start = caseTouchStartX.current;
-              caseTouchStartX.current = null;
-              if (start == null) return;
-              const end = e.changedTouches[0]?.clientX;
-              if (end == null) return;
-              const delta = end - start;
-              if (Math.abs(delta) < 48) return;
-              if (delta > 0) goCasePrev();
-              else goCaseNext();
-            }}
-            role="region"
-            aria-roledescription="carousel"
-            aria-label="Client results case studies"
-            tabIndex={0}
-          >
-            <div className="mx-auto flex w-full max-w-[880px] items-center gap-2 sm:gap-4 md:gap-6">
-              <button
-                type="button"
-                onClick={goCasePrev}
-                disabled={isFirstCaseSlide}
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-sb-border bg-sb-card text-sb-text shadow-sm transition hover:border-sb-border-strong hover:bg-sb-bg-secondary disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-sb-border disabled:hover:bg-sb-card sm:h-11 sm:w-11"
-                aria-label="Previous case study"
-              >
-                <ChevronLeft className="h-5 w-5" aria-hidden />
-              </button>
-              <div className="min-w-0 flex-1">
-                <div className="overflow-hidden rounded-2xl">
+        {/* LOGOS */}
+        <div className={s.logos}>
+          <div className={cx("wrap", "logos-inner")}>
+            <p>A proven outbound engine by Social Bloom</p>
+            <div className={s.marquee} aria-label="Client companies">
+              <div className={s["marquee-track"]}>
+                {/* Two identical groups so the loop is seamless at -50% */}
+                {[false, true].map((isCopy) => (
                   <div
-                    className="flex transition-transform duration-500 ease-out motion-reduce:transition-none"
-                    style={{ transform: `translateX(-${caseSlide * 100}%)` }}
+                    key={String(isCopy)}
+                    className={s["marquee-group"]}
+                    aria-hidden={isCopy || undefined}
                   >
-                    {CASE_STUDIES.map((study, slideIndex) => (
-                      <article
-                        key={study.title}
-                        className="w-full shrink-0 border-x border-transparent px-0.5"
-                        aria-hidden={caseSlide !== slideIndex}
+                    {CLIENTS.map((client) => (
+                      <a
+                        key={client.name}
+                        href={client.href}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        tabIndex={isCopy ? -1 : undefined}
+                        className={s["logo-chip"]}
                       >
-                        <div className="rounded-2xl border border-sb-border bg-sb-card p-6 sm:p-8">
-                          <div className="mb-1 font-display text-xl font-semibold">{study.title}</div>
-                          <p className="mb-4 text-[0.95rem] font-medium leading-snug text-sb-text-secondary">
-                            {study.headline}
-                          </p>
-                          <div className="mb-8 flex flex-wrap gap-5">
-                            <div className="min-w-[100px] flex-1 rounded-[10px] border border-sb-border bg-[rgba(42,50,130,0.05)] p-4">
-                              <div className="mb-0.5 font-display text-[1.3rem] font-bold text-sb-accent">
-                                {study.value}
-                              </div>
-                              <div className="text-[0.75rem] font-medium text-sb-text-muted">
-                                {study.metricLabel}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="space-y-6 text-[0.92rem] leading-relaxed text-sb-text-secondary [&_h3]:text-sb-text">
-                            <div>
-                              <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.08em] text-sb-text">
-                                Overview
-                              </h3>
-                              <p>{study.overview}</p>
-                            </div>
-                            <div>
-                              <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.08em] text-sb-text">
-                                What We Did
-                              </h3>
-                              <p className="mb-2 font-medium text-sb-text">{study.whatWeDidLead}</p>
-                              <ul className="list-disc space-y-1.5 pl-5 marker:text-sb-text-muted">
-                                {study.whatWeDid.map((item) => (
-                                  <li key={item}>{item}</li>
-                                ))}
-                              </ul>
-                            </div>
-                            <div>
-                              <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.08em] text-sb-text">
-                                Result
-                              </h3>
-                              <p>{study.result}</p>
-                            </div>
-                          </div>
-                        </div>
-                      </article>
+                        <span className={s["logo-icon"]}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={`https://www.google.com/s2/favicons?domain=${client.domain}&sz=64`}
+                            alt={isCopy ? "" : client.name}
+                            width={32}
+                            height={32}
+                          />
+                        </span>
+                        <span className={s["logo-name"]}>{client.name}</span>
+                      </a>
                     ))}
                   </div>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={goCaseNext}
-                disabled={isLastCaseSlide}
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-sb-border bg-sb-card text-sb-text shadow-sm transition hover:border-sb-border-strong hover:bg-sb-bg-secondary disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-sb-border disabled:hover:bg-sb-card sm:h-11 sm:w-11"
-                aria-label="Next case study"
-              >
-                <ChevronRight className="h-5 w-5" aria-hidden />
-              </button>
-            </div>
-
-            <div className="mt-6 flex justify-center">
-              <div className="flex gap-2" role="group" aria-label="Case study slides">
-                {CASE_STUDIES.map((study, i) => (
-                  <button
-                    key={study.title}
-                    type="button"
-                    aria-current={caseSlide === i ? "true" : undefined}
-                    aria-label={`Show ${study.title}`}
-                    onClick={() => setCaseSlide(i)}
-                    className={`h-2.5 rounded-full transition-[width,background-color] duration-300 ${
-                      caseSlide === i
-                        ? "w-8 bg-sb-primary"
-                        : "w-2.5 bg-sb-border-strong hover:bg-sb-text-muted"
-                    }`}
-                  />
                 ))}
               </div>
             </div>
-            <p className="mt-3 text-center text-xs text-sb-text-muted">
-              Use arrow keys or swipe to move between stories.
-            </p>
           </div>
         </div>
-      </section>
 
-      {/* GUARANTEE / PRICING */}
-      <section id="guarantee">
-        <div className="relative z-[1] mx-auto w-full max-w-sb px-4 sm:px-6">
-          <div className="grid grid-cols-1 items-start gap-12 md:grid-cols-[1fr_1.2fr] md:gap-16">
-            <div className="mb-0 reveal">
-              <div className="mb-3 text-center text-[0.75rem] font-bold uppercase tracking-[0.15em] text-sb-primary">Aligned Incentives</div>
-              <h2 className="mb-4 text-center font-display text-[clamp(1.8rem,3.5vw,2.8rem)] font-extrabold leading-[1.15] tracking-[-0.03em]">
-                Pay for qualified borrower opportunities, not vague marketing
-                activity
-              </h2>
-              <p className="mx-auto max-w-[560px] text-center text-[1.05rem] leading-[1.7] text-sb-text-secondary">
-                We believe lending teams should pay for real opportunity, not
-                dashboards full of noise. Our model is designed to stay aligned
-                with borrower quality and downstream revenue.
-              </p>
-              <div className="mt-8 flex flex-wrap items-baseline justify-center gap-2 sm:justify-start">
-                <span className="font-display text-[clamp(2.25rem,10vw,3.5rem)] font-bold text-sb-accent">$250</span>
-                <span className="max-w-[16rem] text-center text-sm text-sb-text-secondary sm:max-w-none sm:text-left sm:text-base">
-                  / per qualified borrower appointment
+        {/* STATS */}
+        <div className={s.stats}>
+          <div className={cx("wrap", "stats-grid")}>
+            <div className={s.stat}>
+              <strong>$250M+</strong>
+              <p>Pipeline created across Social Bloom</p>
+            </div>
+            <div className={s.stat}>
+              <strong>25,000+</strong>
+              <p>Leads generated across Social Bloom</p>
+            </div>
+            <div className={s.stat}>
+              <strong>100s</strong>
+              <p>Clients served across Social Bloom</p>
+            </div>
+          </div>
+        </div>
+
+        {/* WHO WE HELP — id kept as "about" so the existing header/footer links work */}
+        <section className={s.sec} id="about">
+          <div className={s.wrap}>
+            <div className={s.secthead}>
+              <div className={s.eyebrow}>WHO WE HELP</div>
+              <h2>
+                Built for business financing.{" "}
+                <span style={{ color: "var(--violet)" }}>
+                  Not consumer loans.
                 </span>
-              </div>
-            </div>
-            <div className="flex flex-col gap-5 reveal reveal-delay-1">
-              <div className="flex gap-4 [&_h4]:mb-1 [&_h4]:text-base [&_h4]:font-semibold [&_p]:text-[0.88rem] [&_p]:leading-snug [&_p]:text-sb-text-secondary">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] border border-sb-border bg-gradient-to-br from-[rgba(42,50,130,0.08)] to-sb-primary/5 text-sb-tertiary">
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
-                    <path d="m9 12 2 2 4-4" />
-                  </svg>
-                </div>
-                <div>
-                  <h4>Clear qualification standards</h4>
-                  <p>
-                    We align on what counts before launch so your team knows
-                    what it is paying for.
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-4 [&_h4]:mb-1 [&_h4]:text-base [&_h4]:font-semibold [&_p]:text-[0.88rem] [&_p]:leading-snug [&_p]:text-sb-text-secondary">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] border border-sb-border bg-gradient-to-br from-[rgba(42,50,130,0.08)] to-sb-primary/5 text-sb-tertiary">
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                  </svg>
-                </div>
-                <div>
-                  <h4>No-show protection</h4>
-                  <p>
-                    If a booked borrower no-shows under the agreed terms, we
-                    make it right.
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-4 [&_h4]:mb-1 [&_h4]:text-base [&_h4]:font-semibold [&_p]:text-[0.88rem] [&_p]:leading-snug [&_p]:text-sb-text-secondary">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] border border-sb-border bg-gradient-to-br from-[rgba(42,50,130,0.08)] to-sb-primary/5 text-sb-tertiary">
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                  </svg>
-                </div>
-                <div>
-                  <h4>Quality-first accountability</h4>
-                  <p>
-                    If the opportunity does not match the borrower profile you
-                    approved, it should not count.
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-4 [&_h4]:mb-1 [&_h4]:text-base [&_h4]:font-semibold [&_p]:text-[0.88rem] [&_p]:leading-snug [&_p]:text-sb-text-secondary">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] border border-sb-border bg-gradient-to-br from-[rgba(42,50,130,0.08)] to-sb-primary/5 text-sb-tertiary">
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-                    <polyline points="14 2 14 8 20 8" />
-                    <line x1="16" x2="8" y1="13" y2="13" />
-                    <line x1="16" x2="8" y1="17" y2="17" />
-                    <line x1="10" x2="8" y1="9" y2="9" />
-                  </svg>
-                </div>
-                <div>
-                  <h4>No long-term lock-in</h4>
-                  <p>
-                    We keep the relationship performance-based and easy to
-                    evaluate.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA BANNER */}
-      <div className="relative overflow-hidden border-y border-sb-border bg-sb-bg-secondary py-12 before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(ellipse_60%_80%_at_50%_50%,rgba(42,50,130,0.06),transparent),radial-gradient(ellipse_30%_40%_at_80%_60%,rgba(16,185,154,0.03),transparent)] sm:py-16 md:py-20">
-        <div className="relative z-[1] mx-auto w-full max-w-sb px-4 sm:px-6">
-          <div className="relative z-[1] px-1 text-center [&_h2]:mb-4 [&_h2]:font-display [&_h2]:text-[clamp(1.45rem,calc(4vw+0.5rem),2.6rem)] [&_h2]:font-extrabold [&_h2]:tracking-[-0.03em] [&_p]:mx-auto [&_p]:mb-8 [&_p]:max-w-[520px] [&_p]:text-base [&_p]:text-sb-text-secondary sm:[&_p]:text-[1.05rem] reveal">
-            <h2>Ready for more funded volume?</h2>
-            <p>
-              Stop relying on inconsistent borrower flow. Build a steadier
-              stream of qualified conversations your team can turn into
-              applications and closings.
-            </p>
-            <Link
-              href="/schedule"
-              className="inline-flex min-h-12 w-full max-w-sm items-center justify-center rounded-lg bg-sb-primary px-6 py-3.5 text-base font-semibold text-white shadow-none transition-[background,transform,box-shadow] duration-[250ms] hover:-translate-y-px hover:bg-sb-purple-mid hover:shadow-[0_8px_24px_rgba(95,95,255,0.2)] sm:w-auto sm:max-w-none sm:px-8 sm:py-4"
-            >
-              Book a Strategy Call
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M5 12h14" />
-                <path d="m12 5 7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* FAQ */}
-      <section id="faq">
-        <div className="relative z-[1] mx-auto w-full max-w-sb px-4 sm:px-6">
-          <div className="mb-14 reveal">
-            <div className="mb-3 text-center text-[0.75rem] font-bold uppercase tracking-[0.15em] text-sb-primary">FAQs</div>
-            <h2 className="mb-4 text-center font-display text-[clamp(1.8rem,3.5vw,2.8rem)] font-extrabold leading-[1.15] tracking-[-0.03em]">Frequently Asked Questions</h2>
-          </div>
-          <div className="mx-auto max-w-[780px]">
-            {/* Each FAQ item */}
-            {/* 1 */}
-            <div className="border-b border-sb-border reveal">
-              <button className="flex w-full cursor-pointer items-center justify-between gap-3 border-none bg-transparent py-5 pr-1 text-left font-body text-sm font-semibold text-sb-text break-words text-pretty transition-colors duration-[250ms] hover:text-sb-secondary sm:gap-4 sm:py-6 sm:pr-0 sm:text-base">
-                What kinds of lenders is this for?
-                <svg
-                  className="h-5 w-5 shrink-0 text-sb-text-muted transition-transform duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
-              </button>
-              <div className="faq-answer">
-                <div className="pb-6 text-sm leading-[1.7] text-sb-text-secondary">
-                  We work best with lending teams that need a more predictable
-                  flow of qualified borrower demand and want more conversations
-                  that can turn into real applications.
-                </div>
-              </div>
-            </div>
-
-            {/* 2 */}
-            <div className="border-b border-sb-border reveal">
-              <button className="flex w-full cursor-pointer items-center justify-between gap-3 border-none bg-transparent py-5 pr-1 text-left font-body text-sm font-semibold text-sb-text break-words text-pretty transition-colors duration-[250ms] hover:text-sb-secondary sm:gap-4 sm:py-6 sm:pr-0 sm:text-base">
-                Does this work for purchase, refinance, and home equity?
-                <svg
-                  className="h-5 w-5 shrink-0 text-sb-text-muted transition-transform duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
-              </button>
-              <div className="faq-answer">
-                <div className="pb-6 text-sm leading-[1.7] text-sb-text-secondary">
-                  Yes. Messaging and targeting can be aligned to the loan
-                  products you want to grow.
-                </div>
-              </div>
-            </div>
-
-            {/* 3 */}
-            <div className="border-b border-sb-border reveal">
-              <button className="flex w-full cursor-pointer items-center justify-between gap-3 border-none bg-transparent py-5 pr-1 text-left font-body text-sm font-semibold text-sb-text break-words text-pretty transition-colors duration-[250ms] hover:text-sb-secondary sm:gap-4 sm:py-6 sm:pr-0 sm:text-base">
-                What counts as a qualified borrower opportunity?
-                <svg
-                  className="h-5 w-5 shrink-0 text-sb-text-muted transition-transform duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
-              </button>
-              <div className="faq-answer">
-                <div className="pb-6 text-sm leading-[1.7] text-sb-text-secondary">
-                  That depends on the borrower profile you define up front,
-                  including product fit, geography, and qualification criteria.
-                </div>
-              </div>
-            </div>
-
-            {/* 4 */}
-            <div className="border-b border-sb-border reveal">
-              <button className="flex w-full cursor-pointer items-center justify-between gap-3 border-none bg-transparent py-5 pr-1 text-left font-body text-sm font-semibold text-sb-text break-words text-pretty transition-colors duration-[250ms] hover:text-sb-secondary sm:gap-4 sm:py-6 sm:pr-0 sm:text-base">
-                Is this for consumer-direct teams or branch-based teams?
-                <svg
-                  className="h-5 w-5 shrink-0 text-sb-text-muted transition-transform duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
-              </button>
-              <div className="faq-answer">
-                <div className="pb-6 text-sm leading-[1.7] text-sb-text-secondary">
-                  It can support either model, as long as there is a clear
-                  handoff from demand generation to the team responsible for
-                  conversion.
-                </div>
-              </div>
-            </div>
-
-            {/* 5 */}
-            <div className="border-b border-sb-border reveal">
-              <button className="flex w-full cursor-pointer items-center justify-between gap-3 border-none bg-transparent py-5 pr-1 text-left font-body text-sm font-semibold text-sb-text break-words text-pretty transition-colors duration-[250ms] hover:text-sb-secondary sm:gap-4 sm:py-6 sm:pr-0 sm:text-base">
-                How should success be measured?
-                <svg
-                  className="h-5 w-5 shrink-0 text-sb-text-muted transition-transform duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
-              </button>
-              <div className="faq-answer">
-                <div className="pb-6 text-sm leading-[1.7] text-sb-text-secondary">
-                  Not by raw lead volume. Measure qualified appointments,
-                  application rate, cost per application, and funded volume.
-                </div>
-              </div>
-            </div>
-
-            {/* 6 */}
-            <div className="border-b border-sb-border reveal hidden">
-              <button className="flex w-full cursor-pointer items-center justify-between gap-3 border-none bg-transparent py-5 pr-1 text-left font-body text-sm font-semibold text-sb-text break-words text-pretty transition-colors duration-[250ms] hover:text-sb-secondary sm:gap-4 sm:py-6 sm:pr-0 sm:text-base">
-                What do you define as a &quot;Sales Qualified Lead&quot; (SQL)?
-                <svg
-                  className="h-5 w-5 shrink-0 text-sb-text-muted transition-transform duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
-              </button>
-              <div className="faq-answer">
-                <div className="pb-6 text-sm leading-[1.7] text-sb-text-secondary">
-                  An SQL is a booked meeting on your calendar with a prospect
-                  who meets the specific, pre-agreed-upon criteria of your Ideal
-                  Customer Profile (ICP). This typically includes factors like
-                  industry, company size, the prospect&apos;s job title, and
-                  their expressed interest in your services. We define these
-                  criteria with you during onboarding to ensure we only deliver
-                  high-quality, relevant opportunities.
-                </div>
-              </div>
-            </div>
-
-            {/* 7 */}
-            <div className="border-b border-sb-border reveal hidden">
-              <button className="flex w-full cursor-pointer items-center justify-between gap-3 border-none bg-transparent py-5 pr-1 text-left font-body text-sm font-semibold text-sb-text break-words text-pretty transition-colors duration-[250ms] hover:text-sb-secondary sm:gap-4 sm:py-6 sm:pr-0 sm:text-base">
-                How do you ensure the quality of the leads?
-                <svg
-                  className="h-5 w-5 shrink-0 text-sb-text-muted transition-transform duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
-              </button>
-              <div className="faq-answer">
-                <div className="pb-6 text-sm leading-[1.7] text-sb-text-secondary">
-                  Quality is controlled by our &quot;Intelligence-First&quot;
-                  approach:
-                  <br />
-                  <br />
-                  <strong>1. ICP Matrix:</strong> We use AI to pinpoint your
-                  most profitable buyer personas based on historical data.
-                  <br />
-                  <br />
-                  <strong>2. 1:1 Personalization:</strong> Every message is
-                  unique to the prospect&apos;s business state, eliminating the
-                  &quot;spam&quot; feel of traditional outreach.
-                  <br />
-                  <br />
-                  <strong>3. The Qualification Guarantee:</strong> If a prospect
-                  doesn&apos;t match the specific ICP criteria we established
-                  during onboarding, you don&apos;t pay for the lead.
-                </div>
-              </div>
-            </div>
-
-            {/* 8 */}
-            <div className="border-b border-sb-border reveal hidden">
-              <button className="flex w-full cursor-pointer items-center justify-between gap-3 border-none bg-transparent py-5 pr-1 text-left font-body text-sm font-semibold text-sb-text break-words text-pretty transition-colors duration-[250ms] hover:text-sb-secondary sm:gap-4 sm:py-6 sm:pr-0 sm:text-base">
-                What if a prospect is a &quot;no-show&quot; for a meeting?
-                <svg
-                  className="h-5 w-5 shrink-0 text-sb-text-muted transition-transform duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
-              </button>
-              <div className="faq-answer">
-                <div className="pb-6 text-sm leading-[1.7] text-sb-text-secondary">
-                  We believe in a shared-accountability partnership. If you have
-                  implemented our Sales Mastery best practices, including our
-                  pre-call VSL and automated follow-up sequences, we will
-                  replace no-shows at no additional cost.
-                </div>
-              </div>
-            </div>
-
-            {/* 9 */}
-            <div className="border-b border-sb-border reveal hidden">
-              <button className="flex w-full cursor-pointer items-center justify-between gap-3 border-none bg-transparent py-5 pr-1 text-left font-body text-sm font-semibold text-sb-text break-words text-pretty transition-colors duration-[250ms] hover:text-sb-secondary sm:gap-4 sm:py-6 sm:pr-0 sm:text-base">
-                What is the process for rejecting a lead and getting a
-                replacement?
-                <svg
-                  className="h-5 w-5 shrink-0 text-sb-text-muted transition-transform duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
-              </button>
-              <div className="faq-answer">
-                <div className="pb-6 text-sm leading-[1.7] text-sb-text-secondary">
-                  This is a partnership based on mutual transparency. If you
-                  determine a prospect doesn&apos;t meet our pre-agreed
-                  qualification criteria, just let us know. We won&apos;t bill
-                  you for that lead. However, if calls are consistently marked
-                  as &quot;unqualified&quot; without valid reason, we reserve
-                  the right to pause the campaign.
-                </div>
-              </div>
-            </div>
-
-            {/* 10 */}
-            <div className="border-b border-sb-border reveal hidden">
-              <button className="flex w-full cursor-pointer items-center justify-between gap-3 border-none bg-transparent py-5 pr-1 text-left font-body text-sm font-semibold text-sb-text break-words text-pretty transition-colors duration-[250ms] hover:text-sb-secondary sm:gap-4 sm:py-6 sm:pr-0 sm:text-base">
-                What does the setup fee cover?
-                <svg
-                  className="h-5 w-5 shrink-0 text-sb-text-muted transition-transform duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
-              </button>
-              <div className="faq-answer">
-                <div className="pb-6 text-sm leading-[1.7] text-sb-text-secondary">
-                  The one-time, non-refundable setup fee covers the &quot;hard
-                  costs&quot; and high-level engineering required to build your
-                  outbound foundation. This includes:
-                  <br />
-                  <br />
-                  <strong>Infrastructure Engineering:</strong> Deploying your
-                  dedicated, &quot;closed-loop&quot; sending environment
-                  (domains, warming, and management).
-                  <br />
-                  <br />
-                  <strong>AI-Guided Strategy:</strong> Building your custom ICP
-                  Matrix and optimizing your offer for cold outbound resonance.
-                  <br />
-                  <br />
-                  <strong>Knowledge Base Integration:</strong>{" "}
-                  &quot;Feeding&quot; the AI your company data so it can handle
-                  technical objections autonomously.
-                  <br />
-                  <br />
-                  <strong>Sales Mentoring:</strong> Immediate access to our
-                  High-Ticket Sales Mastery course and ongoing support to ensure
-                  you can close cold leads.
-                </div>
-              </div>
-            </div>
-
-            {/* 11 */}
-            <div className="border-b border-sb-border reveal hidden">
-              <button className="flex w-full cursor-pointer items-center justify-between gap-3 border-none bg-transparent py-5 pr-1 text-left font-body text-sm font-semibold text-sb-text break-words text-pretty transition-colors duration-[250ms] hover:text-sb-secondary sm:gap-4 sm:py-6 sm:pr-0 sm:text-base">
-                What is the typical monthly investment?
-                <svg
-                  className="h-5 w-5 shrink-0 text-sb-text-muted transition-transform duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
-              </button>
-              <div className="faq-answer">
-                <div className="pb-6 text-sm leading-[1.7] text-sb-text-secondary">
-                  We charge a one-time setup fee to cover the engineering of
-                  your outbound foundation and infrastructure. After launch, you
-                  simply pay a fixed performance fee of $250 for every
-                  Sales-Qualified Lead (SQL) that meets your criteria and books
-                  on your calendar. The scale is up to you. How many calls do
-                  you want booked each month?
-                </div>
-              </div>
-            </div>
-
-            {/* 12 */}
-            <div className="border-b border-sb-border reveal hidden">
-              <button className="flex w-full cursor-pointer items-center justify-between gap-3 border-none bg-transparent py-5 pr-1 text-left font-body text-sm font-semibold text-sb-text break-words text-pretty transition-colors duration-[250ms] hover:text-sb-secondary sm:gap-4 sm:py-6 sm:pr-0 sm:text-base">
-                Are there any long-term contracts?
-                <svg
-                  className="h-5 w-5 shrink-0 text-sb-text-muted transition-transform duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
-              </button>
-              <div className="faq-answer">
-                <div className="pb-6 text-sm leading-[1.7] text-sb-text-secondary">
-                  No. While there is a one-time setup fee to engineer your
-                  foundation and stand up your infrastructure, our
-                  performance-based partnership is strictly month-to-month. We
-                  believe that long-term contracts protect underperforming
-                  agencies, not clients. By keeping our agreement
-                  month-to-month, we force ourselves to earn your business every
-                  30 days. It ensures we remain laser-focused on hitting your
-                  revenue targets, because we know you can leave if the results
-                  aren&apos;t there.
-                </div>
-              </div>
-            </div>
-
-            {/* 13 */}
-            <div className="border-b border-sb-border reveal hidden">
-              <button className="flex w-full cursor-pointer items-center justify-between gap-3 border-none bg-transparent py-5 pr-1 text-left font-body text-sm font-semibold text-sb-text break-words text-pretty transition-colors duration-[250ms] hover:text-sb-secondary sm:gap-4 sm:py-6 sm:pr-0 sm:text-base">
-                Are there any hidden fees?
-                <svg
-                  className="h-5 w-5 shrink-0 text-sb-text-muted transition-transform duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
-              </button>
-              <div className="faq-answer">
-                <div className="pb-6 text-sm leading-[1.7] text-sb-text-secondary">
-                  No. Per-booked-call fee is all-inclusive. It covers all
-                  software, tools, data and campaign costs required to generate
-                  your leads. There are no surprise charges.
-                </div>
-              </div>
-            </div>
-
-            {/* 14 */}
-            <div className="border-b border-sb-border reveal hidden">
-              <button className="flex w-full cursor-pointer items-center justify-between gap-3 border-none bg-transparent py-5 pr-1 text-left font-body text-sm font-semibold text-sb-text break-words text-pretty transition-colors duration-[250ms] hover:text-sb-secondary sm:gap-4 sm:py-6 sm:pr-0 sm:text-base">
-                What kinds of businesses do you work with?
-                <svg
-                  className="h-5 w-5 shrink-0 text-sb-text-muted transition-transform duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
-              </button>
-              <div className="faq-answer">
-                <div className="pb-6 text-sm leading-[1.7] text-sb-text-secondary">
-                  We partner with established, forward-thinking B2B companies
-                  who are serious about scaling their sales pipeline. Our most
-                  successful clients are typically:
-                  <br />
-                  <br />
-                  • Creative Agencies
-                  <br />
-                  • SaaS &amp; Technology Companies
-                  <br />
-                  • High-End Professional Services &amp; Consulting Firms
-                  <br />
-                  • Software Development Agencies
-                  <br />
-                  • Financial Services with complex B2B offerings
-                  <br />
-                  • IT &amp; MSPs
-                  <br />
-                  • Executive Recruiting, Sales Enablement and more
-                  <br />
-                  <br />
-                  If your business growth is tied directly to acquiring new
-                  clients, we can help you build the predictable, scalable
-                  pipeline you need.
-                </div>
-              </div>
-            </div>
-
-            {/* 15 */}
-            <div className="border-b border-sb-border reveal hidden">
-              <button className="flex w-full cursor-pointer items-center justify-between gap-3 border-none bg-transparent py-5 pr-1 text-left font-body text-sm font-semibold text-sb-text break-words text-pretty transition-colors duration-[250ms] hover:text-sb-secondary sm:gap-4 sm:py-6 sm:pr-0 sm:text-base">
-                Do you guys actually use this yourselves?
-                <svg
-                  className="h-5 w-5 shrink-0 text-sb-text-muted transition-transform duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
-              </button>
-              <div className="faq-answer">
-                <div className="pb-6 text-sm leading-[1.7] text-sb-text-secondary">
-                  Absolutely. We are our own &quot;Customer Zero.&quot; Our
-                  growth is fueled by the same AI SDR engine we provide to our
-                  clients; every meeting on our calendar was identified,
-                  nurtured, and booked by Social Bloom.
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* SALES MASTERY */}
-      <section className="border-y border-sb-border bg-sb-bg-secondary">
-        <div className="relative z-[1] mx-auto w-full max-w-sb px-4 sm:px-6">
-          <div className="grid grid-cols-1 items-center gap-14 md:grid-cols-2">
-            <div className="reveal">
-              <div className="mb-3 text-center text-[0.75rem] font-bold uppercase tracking-[0.15em] text-sb-primary">
-                Included With Every Partnership
-              </div>
-              <h2 className="mb-4 text-center font-display text-[clamp(1.8rem,3.5vw,2.8rem)] font-extrabold leading-[1.15] tracking-[-0.03em]">High-Ticket Sales Mastery</h2>
-              <p className="mx-auto max-w-[560px] text-center text-[1.05rem] leading-[1.7] text-sb-text-secondary">
-                Generating a qualified meeting is only half the battle. Every
-                Social Bloom partnership includes lifetime access to our sales
-                resources.
+              </h2>
+              <p className={s.lead}>
+                Your borrowers are business owners and commercial
+                decision-makers. Your acquisition strategy should reflect that.
+                We tailor campaigns to the financing products you actually
+                offer.
               </p>
-              <div className="mt-8 flex flex-col gap-6">
-                <div className="flex gap-3.5 [&_h4]:mb-1 [&_h4]:text-[0.95rem] [&_h4]:font-semibold [&_p]:text-sm [&_p]:leading-snug [&_p]:text-sb-text-secondary">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] border border-sb-accent/[0.12] bg-sb-accent/[0.08] text-sb-accent">
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4>Proven Sales Frameworks</h4>
-                    <p>
-                      Scripts and strategies to handle any objection and close
-                      high-value deals with confidence.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-3.5 [&_h4]:mb-1 [&_h4]:text-[0.95rem] [&_h4]:font-semibold [&_p]:text-sm [&_p]:leading-snug [&_p]:text-sb-text-secondary">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] border border-sb-accent/[0.12] bg-sb-accent/[0.08] text-sb-accent">
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                      <circle cx="9" cy="7" r="4" />
-                      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4>Live Mentoring &amp; Coaching</h4>
-                    <p>
-                      Access live training calls to sharpen your team&apos;s
-                      skills and tailor methods to your niche.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-3.5 [&_h4]:mb-1 [&_h4]:text-[0.95rem] [&_h4]:font-semibold [&_p]:text-sm [&_p]:leading-snug [&_p]:text-sb-text-secondary">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] border border-sb-accent/[0.12] bg-sb-accent/[0.08] text-sb-accent">
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4>Perpetual Growth Toolkit</h4>
-                    <p>
-                      Complete library of SOPs, templates, and advanced training
-                      materials to sustain growth on your own terms.
-                    </p>
-                  </div>
+            </div>
+            <div className={s.cards}>
+              {INDUSTRIES.map((item) => (
+                <article key={item.title} className={s.service}>
+                  <div className={s["service-icon"]}>{item.icon}</div>
+                  <h3>{item.title}</h3>
+                  <p>{item.body}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* PROBLEM */}
+        <section className={cx("sec", "problem")}>
+          <div className={cx("wrap", "problem-grid")}>
+            <div>
+              <div className={cx("eyebrow", "mint")}>
+                THE REAL PIPELINE PROBLEM
+              </div>
+              <h2>
+                Your funding team shouldn&apos;t spend all day{" "}
+                <span style={{ color: "var(--mint)" }}>hunting for deals.</span>
+              </h2>
+              <p className={s.lead}>
+                Brokers, lead vendors, referrals, and paid ads can all have a
+                place. None should be your only engine for getting in front of
+                new business borrowers.
+              </p>
+              <BookingLink variant="white" style={{ marginTop: 25 }} />
+            </div>
+            <div className={s.comparison}>
+              <div className={s.compare}>
+                <span className={s.cross}>✕</span>
+                <div>
+                  <b>Recycled leads and crowded inboxes</b>
+                  <p>
+                    Paying to chase the same prospects who may already be
+                    talking with several competing financing companies.
+                  </p>
                 </div>
               </div>
-            </div>
-            <div className="order-first flex items-center justify-center md:order-none reveal reveal-delay-2">
-              <div className="relative flex aspect-square w-full max-w-[400px] items-center justify-center overflow-hidden rounded-[20px] border border-sb-border bg-gradient-to-br from-sb-card to-[rgba(42,50,130,0.06)] before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_30%_30%,rgba(16,185,154,0.06),transparent_60%),radial-gradient(circle_at_70%_70%,rgba(95,95,255,0.06),transparent_60%)]">
-                <div className="relative z-[1] flex flex-col items-center gap-5 text-center [&_svg]:h-24 [&_svg]:w-24 [&_svg]:[filter:drop-shadow(0_0_30px_rgba(95,95,255,0.2))] [&_p]:font-display [&_p]:text-[1.3rem] [&_p]:font-semibold [&_p]:text-sb-text [&_span]:text-sm [&_span]:text-sb-text-muted">
-                  <svg
-                    width="96"
-                    height="96"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    className="text-sb-primary"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-                    <path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5" />
-                  </svg>
-                  <p>Sales Mastery</p>
-                  <span>Lifetime Access Included</span>
+              <div className={s.compare}>
+                <span className={s.cross}>✕</span>
+                <div>
+                  <b>Feast-or-famine referrals</b>
+                  <p>
+                    Depending on unpredictable introductions leaves your sales
+                    team vulnerable to pipeline gaps.
+                  </p>
+                </div>
+              </div>
+              <div className={cx("compare", "green")}>
+                <span className={s.tick}>✓</span>
+                <div>
+                  <b style={{ color: "var(--mint)" }}>
+                    Your own targeted outbound channel
+                  </b>
+                  <p>
+                    Proactively reach relevant business decision-makers with
+                    campaigns built around your actual financing criteria.
+                  </p>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+
+        {/* PROCESS */}
+        <section className={cx("sec", "process")} id="how">
+          <div className={s.wrap}>
+            <div className={s.secthead}>
+              <div className={s.eyebrow}>THE SOCIAL BLOOM SYSTEM</div>
+              <h2>
+                We build the pipeline.
+                <br />
+                <span style={{ color: "var(--violet)" }}>
+                  You close the deals.
+                </span>
+              </h2>
+              <p className={s.lead}>
+                One dedicated system. Four clear steps. We handle the heavy
+                lifting between identifying the right companies and getting
+                meetings onto your calendar.
+              </p>
+            </div>
+            <div className={s.steps}>
+              {STEPS.map((step) => (
+                <div key={step.n} className={s.step}>
+                  <div className={s["step-number"]}>
+                    {step.n} <span>{step.icon}</span>
+                  </div>
+                  <h3>{step.title}</h3>
+                  <p>{step.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CASE STUDY — id kept as "cases" for the existing header/footer links */}
+        <section className={cx("sec", "case")} id="cases">
+          <div className={cx("wrap", "case-grid")}>
+            <div>
+              <div className={s.eyebrow}>ACTUAL LENDING CLIENT RESULTS</div>
+              <h2>
+                Not another lead-generation promise.{" "}
+                <span style={{ color: "var(--violet)" }}>
+                  Real lending pipeline.
+                </span>
+              </h2>
+              <p className={s.lead}>
+                Best Lending Co needed a reliable way to reach repeat real
+                estate investors—without pulling its team away from closing.
+                Social Bloom built targeted prospecting and personalized cold
+                email that carried outreach through to booked calls.
+              </p>
+              <div className={s["case-list"]}>
+                <div>
+                  <span className={s.check}>✓</span>
+                  <span>
+                    <b>142 leads generated</b> through targeted investor
+                    prospecting.
+                  </span>
+                </div>
+                <div>
+                  <span className={s.check}>✓</span>
+                  <span>
+                    <b>82 sales-qualified leads</b> generated through the
+                    campaign.
+                  </span>
+                </div>
+                <div>
+                  <span className={s.check}>✓</span>
+                  <span>
+                    <b>$1.4 million in pipeline value</b> in three months.
+                  </span>
+                </div>
+              </div>
+              <BookingLink variant="dark" />
+            </div>
+            <div className={s["case-card"]}>
+              <div className={s["case-ident"]}>
+                <div className={s["case-logo"]}>
+                  BEST
+                  <br />
+                  LENDING
+                </div>
+                <div>
+                  <b>Best Lending Co</b>
+                  <small>
+                    Real estate investor financing • Client case study
+                  </small>
+                </div>
+              </div>
+              <div className={s["case-numbers"]}>
+                <div>
+                  <strong>$1.4M</strong>
+                  <span>Pipeline value</span>
+                </div>
+                <div>
+                  <strong>82</strong>
+                  <span>Sales-qualified leads</span>
+                </div>
+              </div>
+              <div className={s["case-bar"]}>
+                <b>142 leads generated</b>
+                <div className={s.bar}>
+                  <span />
+                </div>
+                <p
+                  style={{
+                    fontSize: 11,
+                    lineHeight: 1.7,
+                    color: "#757d94",
+                    marginBottom: 0,
+                  }}
+                >
+                  Outreach → positive conversations → qualified investor
+                  appointments
+                </p>
+              </div>
+              <div
+                style={{
+                  fontSize: 11,
+                  color: "#7d8699",
+                  marginTop: 23,
+                  lineHeight: 1.7,
+                }}
+              >
+                Published Social Bloom case study. Historical client-specific
+                results are not a funding or appointment guarantee.
+              </div>
+            </div>
+          </div>
+          <div className={s.wrap}>
+            <div className={s.testimonial}>
+              {/* #t=0.1 makes Safari show the first frame instead of a black box */}
+              <video controls playsInline preload="metadata">
+                <source src={`${BEST_LENDING_VIDEO}#t=0.1`} type="video/mp4" />
+              </video>
+              <div className={s["testimonial-bar"]}>
+                <div>
+                  <small>CLIENT TESTIMONIAL</small>
+                  <b>Best Lending Co growth story</b>
+                </div>
+                <span>$1M+ in pipeline generated with Social Bloom</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* PRECISION TARGETING */}
+        <section className={cx("sec", "qual")}>
+          <div className={cx("wrap", "qual-grid")}>
+            <div>
+              <div className={cx("eyebrow", "mint")}>PRECISION TARGETING</div>
+              <h2>
+                Not just any company.{" "}
+                <span style={{ color: "var(--mint)" }}>
+                  Your ideal business borrower.
+                </span>
+              </h2>
+              <p className={s.lead}>
+                Every lender has different products, restrictions, and target
+                customers. That&apos;s why we build outbound around your
+                approved ICP Matrix, instead of sending generic blasts to every
+                business owner we can find.
+              </p>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 9,
+                  marginTop: 28,
+                }}
+              >
+                {[
+                  "Industry",
+                  "Revenue criteria",
+                  "Geography",
+                  "Company size",
+                  "Decision-maker",
+                  "Financing category",
+                ].map((pill) => (
+                  <span key={pill} className={s.pill}>
+                    {pill}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className={s["icp-box"]}>
+              <div className={s["icp-title"]}>
+                Targeting Profile <span>✓ Example ICP</span>
+              </div>
+              {ICP_LINES.map(([label, value]) => (
+                <div key={label} className={s["icp-line"]}>
+                  <span>{label}</span>
+                  <b>{value}</b>
+                </div>
+              ))}
+              <div className={s["icp-foot"]}>
+                Sample targeting illustration only. We do not represent
+                pre-approved borrowers or guarantee a funding decision.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* PRICING — id kept as "guarantee" for the existing header/footer links */}
+        <section className={cx("sec", "pricing")} id="guarantee">
+          <div className={cx("wrap", "pricing-grid")}>
+            <div>
+              <div className={s.eyebrow}>SIMPLE, PERFORMANCE-BASED MODEL</div>
+              <h2>
+                Pay for{" "}
+                <span style={{ color: "var(--violet)" }}>
+                  qualified opportunities.
+                </span>{" "}
+                Not just activity.
+              </h2>
+              <p className={s.lead}>
+                A clear, two-part pricing model: a one-time onboarding fee to
+                build and launch your outbound system, followed by $250 per
+                qualified appointment under your client agreement.
+              </p>
+              <div className={s.calculator}>
+                <div className={s["calc-row"]}>
+                  <b>Explore meeting volume</b>
+                  <output>{meetings} meetings</output>
+                </div>
+                <input
+                  aria-label="Monthly qualified appointment count"
+                  className={s.range}
+                  type="range"
+                  min={5}
+                  max={40}
+                  step={5}
+                  value={meetings}
+                  onChange={(e) => setMeetings(Number(e.target.value))}
+                />
+                <div className={s["calc-inputs"]}>
+                  <div>
+                    <label htmlFor="avg-loan">
+                      Average funded loan amount
+                    </label>
+                    <input
+                      aria-label="Average funded loan amount in dollars"
+                      id="avg-loan"
+                      inputMode="decimal"
+                      min={0}
+                      step={1000}
+                      type="number"
+                      value={avgLoan}
+                      onChange={(e) => setAvgLoan(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="revenue-rate">
+                      Your revenue on funded volume
+                    </label>
+                    <div className={s["percentage-field"]}>
+                      <input
+                        aria-label="Lender revenue as percentage of funded amount"
+                        id="revenue-rate"
+                        inputMode="decimal"
+                        max={100}
+                        min={0}
+                        step={0.1}
+                        type="number"
+                        value={revenueRate}
+                        onChange={(e) => setRevenueRate(e.target.value)}
+                      />
+                      <span>%</span>
+                    </div>
+                  </div>
+                </div>
+                <div className={s["calc-row"]}>
+                  <span style={{ fontSize: 12, color: "#738097" }}>
+                    Assumed appointment-to-funded-deal win rate
+                  </span>
+                  <strong style={{ color: "var(--deep)" }}>25%</strong>
+                </div>
+                <div aria-live="polite" className={s["calc-results"]}>
+                  <div className={s["calc-result"]}>
+                    <small>Estimated deals closed</small>
+                    <output>
+                      {deals.toLocaleString("en-US", {
+                        maximumFractionDigits: 2,
+                      })}
+                    </output>
+                  </div>
+                  <div className={s["calc-result"]}>
+                    <small>Potential funded deal volume</small>
+                    <output>{usd(funded)}</output>
+                  </div>
+                  <div
+                    className={cx("calc-result", "highlight")}
+                    style={{ gridColumn: "1 / -1" }}
+                  >
+                    <small>
+                      Estimated gross lender revenue{" "}
+                      <span style={{ fontWeight: 400 }}>
+                        (funded volume × your revenue rate)
+                      </span>
+                    </small>
+                    <output>{usd(gross)}</output>
+                  </div>
+                </div>
+                <div className={s["calc-breakdown"]}>
+                  <div className={s["calc-row"]}>
+                    <span>Performance fees ($250 per qualified appointment)</span>
+                    <output>{usd(meetings * FEE_PER_APPOINTMENT)}</output>
+                  </div>
+                </div>
+                <p className={s["calc-note"]}>
+                  Illustrative scenario, not a forecast or guarantee. Onboarding
+                  is not included in this calculator. 25% is an assumed
+                  appointment-to-funded-deal conversion rate; actual results may
+                  differ. Fractional deals represent an expected-value estimate,
+                  not partially funded loans. Funded deal volume is not lender
+                  revenue. Gross lender revenue depends on your actual economics
+                  and excludes servicing, funding costs, defaults, and other
+                  expenses. Tax and other agreed charges excluded.
+                </p>
+              </div>
+            </div>
+            <div className={s["price-card"]}>
+              <div className={s["price-tag"]}>
+                ONE-TIME ONBOARDING + PERFORMANCE PRICING
+              </div>
+              <div className={s["onboarding-fee"]}>
+                <div className={s["onboarding-label"]}>
+                  ONE-TIME ONBOARDING FEE
+                </div>
+                <div className={s["onboarding-amount"]}>
+                  Quoted during your strategy call
+                </div>
+                <div className={s["onboarding-caption"]}>
+                  Campaign setup, ICP development, outreach infrastructure and
+                  launch preparation.
+                </div>
+                <div className={s["fee-divider"]} />
+                <div className={s["onboarding-label"]}>
+                  ONGOING PERFORMANCE FEE
+                </div>
+              </div>
+              <div className={s["price-large"]}>
+                $250<span> / SQL</span>
+              </div>
+              <p>
+                Per qualified appointment (SQL), based on the approved ICP and
+                billing provisions in your signed agreement. Onboarding is
+                charged separately and only once.
+              </p>
+              <div className={s["price-items"]}>
+                {PRICE_ITEMS.map((item) => (
+                  <span key={item}>{item}</span>
+                ))}
+              </div>
+              <BookingLink variant="white" style={{ width: "100%" }} />
+              <p className={s["price-disclaimer"]}>
+                Qualified meeting definitions, guarantees, credits, no-show
+                treatment, and cancellation are governed by your signed
+                agreement and applicable partnership terms.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section className={s.sec} id="faq">
+          <div className={cx("wrap", "faq-grid")}>
+            <div>
+              <div className={s.eyebrow}>FREQUENTLY ASKED QUESTIONS</div>
+              <h2>
+                Questions?{" "}
+                <span style={{ color: "var(--violet)" }}>
+                  We have answers.
+                </span>
+              </h2>
+              <p className={s.lead}>
+                We work behind the scenes on the sales conversations—your team
+                controls lending decisions.
+              </p>
+              <BookingLink variant="dark" style={{ marginTop: 15 }} />
+            </div>
+            <div className={s["faq-list"]}>
+              {FAQS.map((item, i) => {
+                const open = openFaq === i;
+                return (
+                  <div key={item.q} className={cx("faq-item", open && "open")}>
+                    <button
+                      type="button"
+                      aria-expanded={open}
+                      className={s["faq-q"]}
+                      onClick={() => setOpenFaq(open ? null : i)}
+                    >
+                      {item.q}
+                      <span>+</span>
+                    </button>
+                    <div className={s["faq-a"]}>{item.a}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* CLOSING CTA */}
+        <section className={s.cta}>
+          <div className={s.wrap}>
+            <div
+              className={cx("eyebrow", "mint")}
+              style={{ justifyContent: "center" }}
+            >
+              LET&apos;S BUILD YOUR NEXT PIPELINE
+            </div>
+            <h2>
+              More business conversations.
+              <br />
+              <span style={{ color: "var(--mint)" }}>
+                More opportunities to fund.
+              </span>
+            </h2>
+            <p>
+              Your lending team should be spending its time on deals, not
+              sourcing its next call. See what a targeted outbound engine could
+              look like for your financing product.
+            </p>
+            <BookingLink variant="white" />
+          </div>
+        </section>
+      </main>
 
       <SiteFooter />
     </div>

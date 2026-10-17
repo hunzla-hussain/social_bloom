@@ -15,14 +15,14 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Social Bloom for Lenders | More Qualified Borrower Appointments",
+  title: "Social Bloom for Lenders — B2B Lending Appointment Generation",
   description:
-    "Social Bloom helps lending companies generate qualified borrower appointments for purchase, refinance, and home equity offers without adding more headcount.",
+    "Social Bloom for Lenders. Qualified business financing conversations, booked directly onto your calendar. Done-for-you B2B outbound at $250 per qualified appointment.",
   metadataBase: new URL("https://socialbloom.io"),
   openGraph: {
-    title: "Social Bloom for Lenders | More Qualified Borrower Appointments",
+    title: "Social Bloom for Lenders — B2B Lending Appointment Generation",
     description:
-      "Social Bloom helps lending companies generate qualified borrower appointments for purchase, refinance, and home equity offers without adding more headcount.",
+      "Social Bloom for Lenders. Qualified business financing conversations, booked directly onto your calendar. Done-for-you B2B outbound at $250 per qualified appointment.",
     type: "website",
     url: "https://socialbloom.io",
   },
