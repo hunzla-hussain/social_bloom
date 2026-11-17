@@ -4,6 +4,7 @@ import { useState, type CSSProperties } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { BorrowerCarousel } from "@/components/BorrowerCarousel";
+import { StickyCtaBanner } from "@/components/StickyCtaBanner";
 import s from "./page.module.css";
 
 const cx = (...names: (string | false)[]) =>
@@ -827,8 +828,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* CLOSING CTA */}
-        <section className={s.cta}>
+        {/* CLOSING CTA — the sticky banner hides once this reaches the screen */}
+        <section className={s.cta} data-sticky-cta-stop>
           <div className={s.wrap}>
             <div
               className={cx("eyebrow", "mint")}
@@ -854,6 +855,9 @@ export default function Home() {
       </main>
 
       <SiteFooter />
+
+      {/* Fixed bottom banner from Caleb's mockup — slides in after a short scroll */}
+      <StickyCtaBanner />
     </div>
   );
 }
