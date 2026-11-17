@@ -3,6 +3,11 @@
  * socialbloom_lender_carousel_DEV_READY.html, styled with the lender page's
  * design tokens (see src/app/page.module.css). Selectors are nested under
  * section.section so they win over the page's base element resets.
+ *
+ * White and with no vertical padding of its own: it sits between two white
+ * sections (Who We Help above, the case study below), so their padding gives
+ * the same section-to-section gap as the rest of the page at every breakpoint
+ * instead of doubling it.
  */
 
 section.section {
@@ -11,9 +16,9 @@ section.section {
   --violet: #5f5fff;
   --mint: #2de6c4;
   --muted: #677286;
-  background: #f8f8fc;
+  background: #fff;
   color: var(--ink);
-  padding: 112px 0;
+  padding: 0;
 }
 .section .wrap {
   width: min(1180px, calc(100% - 54px));
@@ -306,9 +311,6 @@ section.section {
 }
 
 @media (max-width: 900px) {
-  section.section {
-    padding: 78px 0;
-  }
   .section .card {
     grid-template-columns: 1fr;
   }
@@ -331,9 +333,6 @@ section.section {
 }
 
 @media (max-width: 650px) {
-  section.section {
-    padding: 70px 0;
-  }
   .section .wrap {
     width: calc(100% - 36px);
   }
