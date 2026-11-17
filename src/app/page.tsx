@@ -3,6 +3,7 @@
 import { useState, type CSSProperties } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { BorrowerCarousel } from "@/components/BorrowerCarousel";
 import s from "./page.module.css";
 
 const cx = (...names: (string | false)[]) =>
@@ -367,94 +368,10 @@ export default function Home() {
           </div>
         </section>
 
-        {/* PROBLEM */}
-        <section className={cx("sec", "problem")}>
-          <div className={cx("wrap", "problem-grid")}>
-            <div>
-              <div className={cx("eyebrow", "mint")}>
-                THE REAL PIPELINE PROBLEM
-              </div>
-              <h2>
-                Your funding team shouldn&apos;t spend all day{" "}
-                <span style={{ color: "var(--mint)" }}>hunting for deals.</span>
-              </h2>
-              <p className={s.lead}>
-                Brokers, lead vendors, referrals, and paid ads can all have a
-                place. None should be your only engine for getting in front of
-                new business borrowers.
-              </p>
-              <BookingLink variant="white" style={{ marginTop: 25 }} />
-            </div>
-            <div className={s.comparison}>
-              <div className={s.compare}>
-                <span className={s.cross}>✕</span>
-                <div>
-                  <b>Recycled leads and crowded inboxes</b>
-                  <p>
-                    Paying to chase the same prospects who may already be
-                    talking with several competing financing companies.
-                  </p>
-                </div>
-              </div>
-              <div className={s.compare}>
-                <span className={s.cross}>✕</span>
-                <div>
-                  <b>Feast-or-famine referrals</b>
-                  <p>
-                    Depending on unpredictable introductions leaves your sales
-                    team vulnerable to pipeline gaps.
-                  </p>
-                </div>
-              </div>
-              <div className={cx("compare", "green")}>
-                <span className={s.tick}>✓</span>
-                <div>
-                  <b style={{ color: "var(--mint)" }}>
-                    Your own targeted outbound channel
-                  </b>
-                  <p>
-                    Proactively reach relevant business decision-makers with
-                    campaigns built around your actual financing criteria.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        {/* SAMPLE BORROWERS — Caleb's carousel content, between Who We Help and the case study */}
+        <BorrowerCarousel />
 
-        {/* PROCESS */}
-        <section className={cx("sec", "process")} id="how">
-          <div className={s.wrap}>
-            <div className={s.secthead}>
-              <div className={s.eyebrow}>THE SOCIAL BLOOM SYSTEM</div>
-              <h2>
-                We build the pipeline.
-                <br />
-                <span style={{ color: "var(--violet)" }}>
-                  You close the deals.
-                </span>
-              </h2>
-              <p className={s.lead}>
-                One dedicated system. Four clear steps. We handle the heavy
-                lifting between identifying the right companies and getting
-                meetings onto your calendar.
-              </p>
-            </div>
-            <div className={s.steps}>
-              {STEPS.map((step) => (
-                <div key={step.n} className={s.step}>
-                  <div className={s["step-number"]}>
-                    {step.n} <span>{step.icon}</span>
-                  </div>
-                  <h3>{step.title}</h3>
-                  <p>{step.body}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* CASE STUDY — id kept as "cases" for the existing header/footer links */}
+        {/* CASE STUDY — directly under the carousel per Caleb. id kept as "cases" for the existing header/footer links */}
         <section className={cx("sec", "case")} id="cases">
           <div className={cx("wrap", "case-grid")}>
             <div>
@@ -562,6 +479,93 @@ export default function Home() {
                 </div>
                 <span>$1M+ in pipeline generated with Social Bloom</span>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* PROBLEM */}
+        <section className={cx("sec", "problem")}>
+          <div className={cx("wrap", "problem-grid")}>
+            <div>
+              <div className={cx("eyebrow", "mint")}>
+                THE REAL PIPELINE PROBLEM
+              </div>
+              <h2>
+                Your funding team shouldn&apos;t spend all day{" "}
+                <span style={{ color: "var(--mint)" }}>hunting for deals.</span>
+              </h2>
+              <p className={s.lead}>
+                Brokers, lead vendors, referrals, and paid ads can all have a
+                place. None should be your only engine for getting in front of
+                new business borrowers.
+              </p>
+              <BookingLink variant="white" style={{ marginTop: 25 }} />
+            </div>
+            <div className={s.comparison}>
+              <div className={s.compare}>
+                <span className={s.cross}>✕</span>
+                <div>
+                  <b>Recycled leads and crowded inboxes</b>
+                  <p>
+                    Paying to chase the same prospects who may already be
+                    talking with several competing financing companies.
+                  </p>
+                </div>
+              </div>
+              <div className={s.compare}>
+                <span className={s.cross}>✕</span>
+                <div>
+                  <b>Feast-or-famine referrals</b>
+                  <p>
+                    Depending on unpredictable introductions leaves your sales
+                    team vulnerable to pipeline gaps.
+                  </p>
+                </div>
+              </div>
+              <div className={cx("compare", "green")}>
+                <span className={s.tick}>✓</span>
+                <div>
+                  <b style={{ color: "var(--mint)" }}>
+                    Your own targeted outbound channel
+                  </b>
+                  <p>
+                    Proactively reach relevant business decision-makers with
+                    campaigns built around your actual financing criteria.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* PROCESS */}
+        <section className={cx("sec", "process")} id="how">
+          <div className={s.wrap}>
+            <div className={s.secthead}>
+              <div className={s.eyebrow}>THE SOCIAL BLOOM SYSTEM</div>
+              <h2>
+                We build the pipeline.
+                <br />
+                <span style={{ color: "var(--violet)" }}>
+                  You close the deals.
+                </span>
+              </h2>
+              <p className={s.lead}>
+                One dedicated system. Four clear steps. We handle the heavy
+                lifting between identifying the right companies and getting
+                meetings onto your calendar.
+              </p>
+            </div>
+            <div className={s.steps}>
+              {STEPS.map((step) => (
+                <div key={step.n} className={s.step}>
+                  <div className={s["step-number"]}>
+                    {step.n} <span>{step.icon}</span>
+                  </div>
+                  <h3>{step.title}</h3>
+                  <p>{step.body}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>

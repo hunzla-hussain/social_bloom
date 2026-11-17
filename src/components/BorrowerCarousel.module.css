@@ -1,0 +1,420 @@
+/*
+ * "Sample business borrowers" carousel — content from Caleb's
+ * socialbloom_lender_carousel_DEV_READY.html, styled with the lender page's
+ * design tokens (see src/app/page.module.css). Selectors are nested under
+ * section.section so they win over the page's base element resets.
+ *
+ * White and with no vertical padding of its own: it sits between two white
+ * sections (Who We Help above, the case study below), so their padding gives
+ * the same section-to-section gap as the rest of the page at every breakpoint
+ * instead of doubling it.
+ */
+
+section.section {
+  --ink: #0d1b2a;
+  --deep: #2a3282;
+  --violet: #5f5fff;
+  --mint: #2de6c4;
+  --muted: #677286;
+  background: #fff;
+  color: var(--ink);
+  padding: 0;
+}
+.section .wrap {
+  width: min(1180px, calc(100% - 54px));
+  margin: auto;
+}
+
+/* Heading — same pattern as the other sections' .secthead */
+.section .head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px;
+  margin-bottom: 46px;
+}
+.section .headText {
+  max-width: 720px;
+}
+.section .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--violet);
+}
+.section .eyebrow:before {
+  content: "";
+  width: 19px;
+  height: 2px;
+  background: currentColor;
+}
+.section h2 {
+  margin: 18px 0;
+  font-size: clamp(32px, 4.3vw, 54px);
+  font-weight: 900;
+  line-height: 1.08;
+  letter-spacing: -2.2px;
+}
+.section h2 span {
+  color: var(--violet);
+}
+.section .lead {
+  max-width: 680px;
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.75;
+  color: var(--muted);
+}
+
+.section .controls {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
+}
+.section .counter {
+  margin-right: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 1px;
+  color: #9097ad;
+}
+.section .counter b {
+  color: var(--ink);
+}
+.section .arrow {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0 0 3px;
+  border: 1px solid #dcdff4;
+  border-radius: 50%;
+  background: #fff;
+  font-size: 26px;
+  line-height: 1;
+  color: var(--deep);
+  transition: 0.2s;
+}
+.section .arrow:hover {
+  border-color: var(--violet);
+  background: var(--violet);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 11px 25px #5f5fff33;
+}
+
+/* Track */
+.section .viewport {
+  min-width: 0;
+  overflow: hidden;
+}
+.section .track {
+  display: flex;
+  align-items: stretch;
+  transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.section .slide {
+  display: flex;
+  flex: 0 0 100%;
+  min-width: 0;
+  /* room for the card shadow inside the clipped viewport */
+  padding: 2px 2px 34px;
+}
+
+/* Card — white like the case-study card, side panel like the pricing card */
+.section .card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.6fr);
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid #e7e9f6;
+  border-radius: 24px;
+  background: #fff;
+  /* kept short so it fits inside the slide padding instead of being clipped */
+  box-shadow: 0 20px 32px -24px rgba(36, 41, 117, 0.3);
+}
+.section .main {
+  display: flex;
+  flex-direction: column;
+  padding: 36px 38px;
+}
+.section .tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.section .industry {
+  padding: 8px 12px;
+  border: 1px solid #dcdff4;
+  border-radius: 100px;
+  background: #f9f9ff;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--deep);
+}
+.section .product {
+  padding: 8px 12px;
+  border: 1px solid #b5f2e5;
+  border-radius: 100px;
+  background: #e9fff9;
+  font-size: 12px;
+  font-weight: 800;
+  color: #0b8069;
+}
+.section .product:before {
+  content: "●";
+  margin-right: 6px;
+  font-size: 8px;
+  vertical-align: 1px;
+  color: #159b81;
+}
+.section h3 {
+  margin: 22px 0 12px;
+  font-size: clamp(22px, 2.4vw, 28px);
+  font-weight: 900;
+  line-height: 1.2;
+  letter-spacing: -0.9px;
+}
+.section .description {
+  flex-grow: 1;
+  margin: 0 0 26px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.section .facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.section .fact {
+  padding: 16px;
+  border-radius: 12px;
+  background: #f4f5fd;
+}
+.section .factLabel {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #6c748a;
+}
+.section .factValue {
+  margin-top: 6px;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.section .side {
+  display: flex;
+  flex-direction: column;
+  padding: 36px 34px;
+  background:
+    radial-gradient(circle at 100% 0, #5f5fff55, transparent 60%),
+    var(--ink);
+  color: #fff;
+}
+.section .sideLabel {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1.6px;
+  color: var(--mint);
+}
+.section .sideLabel.soft {
+  color: #b8c3ff;
+}
+.section .amount {
+  margin-top: 10px;
+  font-size: clamp(36px, 3.8vw, 50px);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -2px;
+}
+.section .divider {
+  height: 1px;
+  margin: 26px 0;
+  background: #ffffff2c;
+}
+.section .price {
+  margin-top: 8px;
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: -1.2px;
+}
+.section .price small {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: #a9b7d0;
+}
+.section .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: auto;
+  padding: 16px 22px;
+  border-radius: 11px;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+  color: var(--deep);
+  transition: 0.2s;
+}
+.section .button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 11px 25px #0d1b2a40;
+}
+.section .sideBlock + .divider + .sideBlock {
+  margin-bottom: 28px;
+}
+
+/* Dots */
+.section .dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 4px;
+}
+.section .dot {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: 0;
+  border-radius: 20px;
+  background: #d6d9ee;
+  transition:
+    background 0.18s,
+    width 0.18s;
+}
+.section .dot:hover {
+  background: #9fa6ff;
+}
+.section .dot.active {
+  width: 26px;
+  background: var(--violet);
+}
+
+.section .arrow:focus-visible,
+.section .dot:focus-visible,
+.section .button:focus-visible {
+  outline: 3px solid #9fa6ff;
+  outline-offset: 3px;
+}
+
+@media (max-width: 900px) {
+  .section .card {
+    grid-template-columns: 1fr;
+  }
+  .section .side {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 24px;
+    align-items: end;
+  }
+  .section .divider {
+    display: none;
+  }
+  .section .sideBlock + .divider + .sideBlock {
+    margin-bottom: 0;
+  }
+  .section .button {
+    grid-column: 1 / -1;
+    margin-top: 24px;
+  }
+}
+
+@media (max-width: 650px) {
+  .section .wrap {
+    width: calc(100% - 36px);
+  }
+  .section .head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 22px;
+    margin-bottom: 30px;
+  }
+  .section h2 {
+    letter-spacing: -1.4px;
+  }
+  .section .arrow {
+    width: 44px;
+    height: 44px;
+  }
+  .section .main {
+    padding: 24px 20px;
+  }
+  .section .tags {
+    gap: 6px;
+  }
+  .section .industry,
+  .section .product {
+    padding: 7px 10px;
+    font-size: 11px;
+  }
+  .section h3 {
+    margin-top: 18px;
+    font-size: 21px;
+  }
+  .section .description {
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+  /* Facts become label/value rows, like the ICP example box */
+  .section .facts {
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: 4px 14px;
+    border-radius: 12px;
+    background: #f4f5fd;
+  }
+  .section .fact {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 0;
+    border-radius: 0;
+    background: none;
+  }
+  .section .fact + .fact {
+    border-top: 1px solid #e4e6f3;
+  }
+  .section .factValue {
+    margin-top: 0;
+    font-size: 13px;
+    text-align: right;
+  }
+  /* Stack amount and price on phones so neither wraps */
+  .section .side {
+    grid-template-columns: 1fr;
+    row-gap: 18px;
+    padding: 24px 20px;
+  }
+  .section .button {
+    margin-top: 6px;
+  }
+  .section .amount {
+    font-size: 34px;
+  }
+  .section .price {
+    font-size: 28px;
+  }
+  .section .button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section .track {
+    transition: none;
+  }
+}
