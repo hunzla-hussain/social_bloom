@@ -3,6 +3,7 @@
 import { useState, type CSSProperties } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { BorrowerCarousel } from "@/components/BorrowerCarousel";
 import s from "./page.module.css";
 
 const cx = (...names: (string | false)[]) =>
@@ -366,6 +367,9 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        {/* SAMPLE BORROWERS — Caleb's carousel content, between Who We Help and the Problem section */}
+        <BorrowerCarousel />
 
         {/* PROBLEM */}
         <section className={cx("sec", "problem")}>
