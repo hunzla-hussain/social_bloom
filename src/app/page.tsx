@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { BorrowerCarousel } from "@/components/BorrowerCarousel";
 import { StickyCtaBanner } from "@/components/StickyCtaBanner";
+import { LiveBorrowersGraphic } from "@/components/LiveBorrowersGraphic";
 import s from "./page.module.css";
 
 const cx = (...names: (string | false)[]) =>
@@ -212,70 +213,10 @@ export default function Home() {
                 <span>Pay per qualified appointment</span>
               </div>
             </div>
-            <div className={cx("dash", "reveal")}>
-              <div className={s["dash-top"]}>
-                <span>✣  Campaign performance</span>
-                <span className={s.live}>● LIVE SYSTEM</span>
-              </div>
-              <div className={s["dash-stats"]}>
-                <div className={s.metric}>
-                  <small>Qualified appointments</small>
-                  <strong>82</strong>
-                  <i>✓ Booked conversations</i>
-                </div>
-                <div className={s.metric}>
-                  <small>Pipeline value</small>
-                  <strong>$1.4M</strong>
-                  <i>↗ In three months</i>
-                </div>
-              </div>
-              <div className={s.chart}>
-                <div className={s["chart-head"]}>
-                  <span>Pipeline momentum</span>
-                  <span style={{ color: "#818ba1" }}>90-day overview</span>
-                </div>
-                <svg
-                  aria-label="Illustrative growth curve"
-                  role="img"
-                  viewBox="0 0 420 130"
-                >
-                  <defs>
-                    <linearGradient
-                      id="lb-pipeline-grad"
-                      x1="0"
-                      x2="0"
-                      y1="0"
-                      y2="1"
-                    >
-                      <stop stopColor="#5F5FFF" stopOpacity=".25" />
-                      <stop offset="1" stopColor="#5F5FFF" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                  <path
-                    d="M0 118L43 112L79 102L112 106L151 87L186 93L226 62L263 68L304 43L346 49L383 21L420 9L420 130L0 130Z"
-                    fill="url(#lb-pipeline-grad)"
-                  />
-                  <path
-                    d="M0 118L43 112L79 102L112 106L151 87L186 93L226 62L263 68L304 43L346 49L383 21L420 9"
-                    fill="none"
-                    stroke="#5F5FFF"
-                    strokeLinecap="round"
-                    strokeWidth="4"
-                  />
-                </svg>
-              </div>
-              <div className={s.pipeline}>
-                <span className={s.avatar}>BL</span>
-                <div>
-                  <b>Best Lending Co</b>
-                  <small>Real client case study • Cold email</small>
-                </div>
-                <label>82 SQLs</label>
-              </div>
-              <div className={s["dash-note"]}>
-                Real published case-study totals; chart is illustrative, not
-                historical time-series data.
-              </div>
+            {/* Caleb (21 Nov): his "live borrower demand" graphic in place of the
+                "Campaign performance" card. */}
+            <div className={cx("reveal", "hero-graphic")}>
+              <LiveBorrowersGraphic />
             </div>
           </div>
         </section>

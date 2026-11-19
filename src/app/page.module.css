@@ -153,11 +153,16 @@
 }
 .hero-grid {
   display: grid;
-  grid-template-columns: 1.06fr 0.94fr;
+  grid-template-columns: 1fr 1fr;
   align-items: center;
-  gap: 55px;
+  gap: 44px;
   min-height: 680px;
   padding: 95px 0 104px;
+}
+/* Caleb's borrowers graphic: on wide screens it runs a little past the right edge of the
+   content (up to 80px, never closer than 20px to the window) so its text is easier to read. */
+.hero-graphic {
+  margin-right: calc(-1 * min(80px, max(0px, (100vw - 1180px) / 2 - 20px)));
 }
 .hero h1 {
   font-size: clamp(45px, 5.35vw, 76px);
@@ -196,119 +201,6 @@
   color: var(--mint);
   padding-right: 7px;
 }
-.dash {
-  border: 1px solid #ffffff5c;
-  background: #ffffffef;
-  padding: 18px;
-  border-radius: 22px;
-  box-shadow: 0 40px 100px #05123865;
-  transform: rotate(1deg);
-  color: var(--ink);
-}
-.dash-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 5px 17px;
-  border-bottom: 1px solid #e9ebf4;
-  font-size: 13px;
-  font-weight: 900;
-}
-.live {
-  background: #e8fff8;
-  color: #168d72;
-  padding: 7px 9px;
-  border-radius: 50px;
-  font-size: 10px;
-}
-.dash-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin: 15px 0;
-}
-.metric {
-  background: #f4f5fd;
-  border-radius: 12px;
-  padding: 19px;
-}
-.metric small {
-  font-size: 11px;
-  color: #6c748a;
-  font-weight: 700;
-}
-.metric strong {
-  display: block;
-  font-size: 32px;
-  letter-spacing: -1.6px;
-  margin-top: 6px;
-}
-.metric i {
-  font-size: 10px;
-  color: #159b81;
-  font-style: normal;
-  font-weight: 900;
-}
-.chart {
-  padding: 15px;
-  border: 1px solid #e9eafa;
-  border-radius: 12px;
-}
-.chart-head {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  font-weight: 900;
-}
-.chart svg {
-  width: 100%;
-  height: 120px;
-}
-.pipeline {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 11px;
-  background: #f8f9fc;
-  border-radius: 9px;
-  padding: 12px;
-}
-.avatar {
-  display: grid;
-  place-items: center;
-  background: #e3e4ff;
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
-  color: var(--deep);
-  font-weight: 900;
-}
-.pipeline div:nth-child(2) {
-  flex: 1;
-}
-.pipeline b {
-  display: block;
-  font-size: 11px;
-}
-.pipeline small {
-  color: #8990a1;
-  font-size: 10px;
-}
-.pipeline label {
-  font-size: 10px;
-  color: #128d6d;
-  background: #dcfaee;
-  padding: 6px 9px;
-  border-radius: 99px;
-  font-weight: 900;
-}
-.dash-note {
-  font-size: 10px;
-  color: #9a9eaf;
-  text-align: center;
-  margin: 12px 0 2px;
-}
-
 /* Logos + stats */
 .logos {
   border-bottom: 1px solid var(--line);
@@ -1116,10 +1008,6 @@ a.btn.primary {
   .hero h1 {
     max-width: 730px;
   }
-  .dash {
-    max-width: 580px;
-    transform: none;
-  }
   .steps {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -1134,6 +1022,10 @@ a.btn.primary {
   .wrap {
     width: calc(100% - 36px);
   }
+  /* Wider on phones (10px from the screen edges) so the graphic is as large as it can be. */
+  .hero-graphic {
+    margin: 0 -8px;
+  }
   .hero-grid {
     padding: 58px 0 70px;
   }
@@ -1146,15 +1038,6 @@ a.btn.primary {
   }
   .hero-proof {
     gap: 10px 18px;
-  }
-  .dash {
-    padding: 12px;
-  }
-  .metric {
-    padding: 12px;
-  }
-  .metric strong {
-    font-size: 27px;
   }
   .sec {
     padding: 70px 0;

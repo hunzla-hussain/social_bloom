@@ -1,0 +1,467 @@
+/* Hero graphic for the lender page: Caleb's "live borrower demand" design
+   (lenders-live-borrowers.html, 21 Nov 2026). Rendered by LiveBorrowersGraphic.tsx.
+   Caleb's file is 1040x680 with a 40px empty margin all round; that margin is trimmed here
+   (960x640, every card moved 40px left and 20px up) so the cards fill the column and the
+   text is larger when the stage is scaled down.
+   The background is transparent so it sits on the dark hero. */
+
+.root {
+  --accent: #4f3ff0;
+  --accent-dark: #3a2bd1;
+  --tint: #eeedff;
+  --green: #1fa971;
+  --green-text: #12774a;
+  --green-bg: #e3f6ec;
+  --amber-text: #8a4b00;
+  --amber-bg: #fff1db;
+  --ink: #0f1222;
+  --body: #3b3f52;
+  --muted: #5a5f73;
+  --line: #ecedf4;
+  --border: #e4e5ef;
+
+  position: relative;
+  width: 100%;
+  aspect-ratio: 960 / 640;
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", system-ui, sans-serif;
+  /* Caleb's design was laid out with the browser defaults. */
+  line-height: normal;
+  letter-spacing: normal;
+  text-align: left;
+  color: var(--ink);
+}
+.root *,
+.root *::before,
+.root *::after {
+  box-sizing: border-box;
+}
+.stage {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 960px;
+  height: 640px;
+  transform-origin: 0 0;
+}
+
+.card {
+  position: absolute;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 28px 70px rgba(30, 27, 75, 0.18);
+}
+
+/* ---------- Main feed ---------- */
+.feedCard {
+  left: 0;
+  top: 16px;
+  width: 580px;
+  height: 596px;
+  border-radius: 20px;
+  box-shadow: 0 24px 60px rgba(30, 27, 75, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.head {
+  padding: 20px 22px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.live {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--green-text);
+  margin-bottom: 3px;
+}
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--green);
+  animation: pulse 1.8s ease-out infinite;
+}
+.title {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.badge {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-dark);
+  background: var(--tint);
+  padding: 6px 11px;
+  border-radius: 999px;
+}
+
+.feed {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 20px;
+  -webkit-mask-image: linear-gradient(transparent, #000 9%, #000 91%, transparent);
+  mask-image: linear-gradient(transparent, #000 9%, #000 91%, transparent);
+}
+.track {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 12px;
+  animation: scroll 80s linear infinite;
+}
+.feed:hover .track {
+  animation-play-state: paused;
+}
+
+.borrower {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  background: #fff;
+}
+.borrowerMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  color: var(--accent-dark);
+  background: var(--tint);
+}
+.tag.isIntent {
+  color: var(--amber-text);
+  background: var(--amber-bg);
+}
+.borrowerTitle {
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.wants {
+  font-size: 12.5px;
+  color: var(--body);
+}
+.wants b {
+  color: var(--ink);
+}
+.meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+.borrowerSide {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+.when {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--green-text);
+}
+.when::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--green);
+}
+.tags .when {
+  margin-left: 2px;
+  font-size: 11px;
+}
+.amount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+.amount b {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.amount span {
+  font-size: 11px;
+  color: var(--muted);
+}
+.speak {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--accent);
+  border: 1px solid #d9d6ff;
+  padding: 7px 12px;
+  border-radius: 9px;
+}
+
+.foot {
+  padding: 14px 20px;
+  border-top: 1px solid var(--line);
+  background: #fafafd;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.footText {
+  font-size: 13px;
+  color: var(--body);
+}
+.cta {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--accent);
+  padding: 10px 16px;
+  border-radius: 10px;
+  text-decoration: none;
+}
+.cta:hover {
+  background: var(--accent-dark);
+  color: #fff;
+}
+.cta:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* Sits under the feed card, on the dark hero, so it is light here
+   (Caleb's file used the dark grey for a light page). */
+.disclaimer {
+  position: absolute;
+  left: 2px;
+  bottom: 4px;
+  width: 580px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* ---------- "New borrower wants to talk" toast ---------- */
+.toast {
+  left: 560px;
+  top: 56px;
+  width: 400px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: toast-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.bell {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.toastHead {
+  font-size: 15px;
+  font-weight: 800;
+}
+.toastTime {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--muted);
+}
+.toastTitle {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.toastFoot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  padding-top: 11px;
+}
+.region {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--green-text);
+  background: var(--green-bg);
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* ---------- Matched products ---------- */
+.match {
+  left: 620px;
+  top: 268px;
+  width: 340px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 24px 60px rgba(30, 27, 75, 0.14);
+  animation: float 6.5s ease-in-out infinite;
+}
+.matchHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--body);
+}
+.chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.chip {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-dark);
+  background: var(--tint);
+  padding: 5px 10px;
+  border-radius: 999px;
+}
+
+/* ---------- Ready today ---------- */
+.ready {
+  right: 0;
+  bottom: 28px;
+  width: 340px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: float 7.5s ease-in-out infinite -2.5s;
+}
+.readyLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.big {
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.avatars {
+  display: flex;
+  align-items: center;
+}
+.avatars span {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 2px solid #fff;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: -8px;
+}
+.avatars span:first-child {
+  margin-left: 0;
+}
+.active {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--green-text);
+  font-weight: 700;
+}
+.active i {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--green);
+  animation: pulse 1.8s ease-out infinite;
+}
+
+/* ---------- Motion ---------- */
+@keyframes scroll {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(31, 169, 113, 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(31, 169, 113, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(31, 169, 113, 0);
+  }
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .track,
+  .match,
+  .ready,
+  .dot,
+  .active i,
+  .toast {
+    animation: none;
+  }
+}
